@@ -1,0 +1,7 @@
+#
+#
+#
+**/target/
+**/tmp/
+**/maven-build.xml
+**/maven-build.properties
