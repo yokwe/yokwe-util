@@ -1,9 +1,11 @@
-package yokwe.util;
+package yokwe.util.graphviz;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+
+import yokwe.util.AutoIndentPrintWriter;
 
 public class Dot {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
