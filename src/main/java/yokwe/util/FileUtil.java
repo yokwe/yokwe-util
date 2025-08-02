@@ -23,6 +23,8 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -279,7 +281,10 @@ public class FileUtil {
 		deleteFile(dir.listFiles(filterOp));
 	}
 	public static void deleteFile(File... files) {
-		for(var file: files) {
+		deleteFile(Arrays.asList(files));
+	}
+	public static void deleteFile(Collection<File> collection) {
+		for(var file: collection) {
 			// skip special files
 			if (file.isDirectory()) {
 				var name = file.getName();

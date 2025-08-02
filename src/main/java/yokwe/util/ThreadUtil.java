@@ -1,9 +1,18 @@
 package yokwe.util;
 
+import java.time.Duration;
+
 public class ThreadUtil {
-	public static void sleep(int millis) {
+	public static void sleep(long millis) {
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			//
+		}
+	}
+	public static void sleep(Duration duration) {
+		try {
+			Thread.sleep(duration);
 		} catch (InterruptedException e) {
 			//
 		}
