@@ -417,6 +417,7 @@ public class HttpUtil {
 		HttpUtil.Result result = this.withRawData(false).download(url);
 		if (result == null || result.result == null) {
 			logger.error("Unexpected");
+			logger.error("  url     {}", url);
 			logger.error("  result  {}", result);
 			throw new UnexpectedException("Unexpected");
 		}
@@ -426,6 +427,7 @@ public class HttpUtil {
 		HttpUtil.Result result = this.withRawData(true).download(url);
 		if (result == null || result.rawData == null) {
 			logger.error("Unexpected");
+			logger.error("  url     {}", url);
 			logger.error("  result  {}", result);
 			throw new UnexpectedException("Unexpected");
 		}
