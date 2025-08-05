@@ -1,5 +1,9 @@
 package yokwe.util;
 
+import java.io.File;
+
+import java.net.MalformedURLException;
+
 public class StringUtil {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 	
@@ -120,5 +124,19 @@ public class StringUtil {
 	//
 	public static String toHalfWidth(String string) {
 		return replaceCharacter(HALFWIDTH_STRING, FULLWIDTH_STRING, string);
+	}
+	
+	
+	//
+	// toURLString
+	//
+	public static String toURLString(File file) {
+		try {
+			return file.toURI().toURL().toString();
+		} catch (MalformedURLException e) {
+			String exceptionName = e.getClass().getSimpleName();
+			logger.error("{} {}", exceptionName, e);
+			throw new UnexpectedException(exceptionName, e);
+		}
 	}
 }
