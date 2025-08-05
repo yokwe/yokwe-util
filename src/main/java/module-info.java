@@ -4,7 +4,9 @@ open module yokwe.util {
 	exports yokwe.util.http;
 	exports yokwe.util.json;
 	exports yokwe.util.libreoffice;
+	exports yokwe.util.makefile;
 	exports yokwe.util.selenium;
+	exports yokwe.util.update;
 	exports yokwe.util.yahoo.finance;
 
 //	exports yokwe.util.stats;
