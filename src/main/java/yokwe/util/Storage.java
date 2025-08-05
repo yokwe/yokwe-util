@@ -16,7 +16,7 @@ public class Storage {
 	
 	public static void initialize() {};
 	
-	private static final String DATA_PATH_FILE = "data/DataPathLocation";
+	private static final String DATA_PATH_FILE = "../yokwe-base/data/DataPathLocation";
 	private static String getDataPath() {
 		logger.info("DATA_PATH_FILE  !{}!", DATA_PATH_FILE);
 		// Sanity check
