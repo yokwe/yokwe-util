@@ -261,11 +261,12 @@ public final class ClassUtil {
     // enumerate class file every package in named module
     //
     public final static List<Class<?>> findClassInModule(String moduleName) {
-    	var module = findModule(moduleName);
-        
+    	return findClassInModule(findModule(moduleName));
+    }
+    public final static List<Class<?>> findClassInModule(Module module) {
         var set = new HashSet<Class<?>>();
         for(var packageName: module.getPackages()) {
-        	set.addAll(findClassInModule(moduleName, packageName));
+        	set.addAll(findClassInModule(module, packageName));
         }
         
         var list = new ArrayList<Class<?>>(set);
@@ -276,7 +277,10 @@ public final class ClassUtil {
     // enumerate class file in named package in named module
     //
     public final static List<Class<?>> findClassInModule(String moduleName, String packageName) {
-		var url = findModule(moduleName).getClassLoader().getResource(packageName.replace(".", "/"));
+    	return findClassInModule(findModule(moduleName), packageName);
+    }
+    public final static List<Class<?>> findClassInModule(Module module, String packageName) {
+		var url = module.getClassLoader().getResource(packageName.replace(".", "/"));
 		
 		List<Class<?>> list;
         if (url.toString().startsWith("file:/")) {
