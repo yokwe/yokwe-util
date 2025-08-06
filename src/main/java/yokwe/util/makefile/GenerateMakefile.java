@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.TreeSet;
 
+import yokwe.util.ClassUtil;
 import yokwe.util.FileUtil;
 
 public class GenerateMakefile {
@@ -17,7 +18,8 @@ public class GenerateMakefile {
 		var moduleName = "yokwe.finance.data";
 		var makeFile   = new File("tmp/update-data.make");
 		
-		var string = generate(moduleName);
+		var module = ClassUtil.findModule(moduleName);
+		var string = generate(module);
 		
 		logger.info("save  {}  {}", string.length(), makeFile.getAbsoluteFile());
 		FileUtil.write().file(makeFile, string);
@@ -25,12 +27,12 @@ public class GenerateMakefile {
 		logger.info("STOP");
 	}
 	
-	public static void generate(String moduleName, File file) {
-		var string = generate(moduleName);
+	public static void generate(Module module, File file) {
+		var string = generate(module);
 		FileUtil.write().file(file, string);
 	}
-	public static String generate(String moduleName) {
-		var list = Makefile.scanModule(moduleName);
+	public static String generate(Module module) {
+		var list = Makefile.scanModule(module);
 
 		var groupNameSet = new TreeSet<String>();
 		list.stream().forEach(o -> groupNameSet.add(o.group));
@@ -40,7 +42,7 @@ public class GenerateMakefile {
 		var sw = new StringWriter();		
 		try (var out = new PrintWriter(sw)) {
 			out.println("#");
-			out.println("# module " + moduleName);
+			out.println("# module " + module.getDescriptor().toNameAndVersion());
 			out.println("#");
 			out.println();
 			out.println(".PHONY: update-data " + String.join(" ", groupUpdateSet));

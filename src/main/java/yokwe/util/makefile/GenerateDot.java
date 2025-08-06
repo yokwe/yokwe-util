@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import yokwe.util.ClassUtil;
 import yokwe.util.FileUtil;
 import yokwe.util.Storage;
 import yokwe.util.ToString;
@@ -22,7 +23,8 @@ public class GenerateDot {
 		var moduleName = "yokwe.finance.data";
 		var dotFile    = new File("tmp/dot/a.dot");
 		
-		var string = generate(moduleName);
+		var module = ClassUtil.findModule(moduleName);
+		var string = generate(module);
 		
 		logger.info("save   {}  {}", string.length(), dotFile);
 		FileUtil.write().file(dotFile, string);
@@ -30,16 +32,16 @@ public class GenerateDot {
 		logger.info("STOP");
 	}
 	
-	public static void generate(String moduleName, File file) {
-		var string = generate(moduleName);
+	public static void generate(Module module, File file) {
+		var string = generate(module);
 		FileUtil.write().file(file, string);
 	}
-	public static String generate(String moduleName) {
+	public static String generate(Module module) {
 		var rootPath = Storage.storage.getFile().getAbsolutePath() + "/";
 		logger.info("rootPath  {}", rootPath);
 		
-		logger.info("moduleName  {}", moduleName);
-		var makeList = Makefile.scanModule(moduleName);
+		logger.info("moduleName  {}", module.getDescriptor().toNameAndVersion());
+		var makeList = Makefile.scanModule(module);
 		logger.info("makeList  {}", makeList.size());
 		
 		var taskList =  makeList.stream().map(o -> new Task(o, rootPath)).collect(Collectors.toList());

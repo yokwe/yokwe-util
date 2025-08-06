@@ -126,15 +126,10 @@ public class Makefile {
 		try {
 			var list = new ArrayList<Makefile>();
 			
-			var clazzList = ClassUtil.findClassInModule(module);
-			logger.info("clazzList  {}", clazzList.size());
-			
-			for(var clazz: clazzList) {
+			for(var clazz: ClassUtil.findClassInModule(module)) {
 				for(var field: clazz.getDeclaredFields()) {
-					logger.info("field  {}", field);
 					field.setAccessible(true);
 					if (Modifier.isStatic(field.getModifiers()) && field.getType().equals(Makefile.class)) {
-						
 						var makefile = (Makefile)field.get(null);
 						list.add(makefile);
 					}
@@ -148,26 +143,4 @@ public class Makefile {
 			throw new UnexpectedException(exceptionName, e);
 		}
 	}
-	
-	public static List<Makefile> scanModule(String moduleName) {		
-		try {
-			var list = new ArrayList<Makefile>();
-			
-			for(var clazz: ClassUtil.findClassInModule(moduleName)) {
-				for(var field: clazz.getDeclaredFields()) {
-					field.setAccessible(true);
-					if (Modifier.isStatic(field.getModifiers()) && field.getType().equals(Makefile.class)) {
-						var makefile = (Makefile)field.get(null);
-						list.add(makefile);
-					}
-				}
-			}
-			
-			return list;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			String exceptionName = e.getClass().getSimpleName();
-			logger.error("{} {}", exceptionName, e);
-			throw new UnexpectedException(exceptionName, e);
-		}
-	}	
 }
