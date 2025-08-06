@@ -115,7 +115,8 @@ public class Makefile {
 	private static String[] tokens = {
 		"update", "stock", "info", "fund", "div", "price", "nisa", "etf", "etn", "infra",
 		"kessan", "reit", "code", "name", "detail", "json", "list", "ohlcv", "value", "jreit",
-		"trading", "jp", "us", "company", "all", "fx", "rate", "2", "intra", "day", "report"};
+		"trading", "jp", "us", "company", "all", "fx", "rate", "2", "intra", "day", "report",
+	};
 	
 	@Override
 	public String toString() {
@@ -142,5 +143,14 @@ public class Makefile {
 			logger.error("{} {}", exceptionName, e);
 			throw new UnexpectedException(exceptionName, e);
 		}
+	}
+	public static List<Makefile> scanModule(Module... modules) {
+		var list = new ArrayList<Makefile>();
+		
+		for(var module: modules) {
+			list.addAll(scanModule(module));
+		}
+		
+		return list;
 	}
 }
