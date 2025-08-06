@@ -301,6 +301,15 @@ public final class ClassUtil {
         }
         return moduleOptional.get();
     }
+    public static List<Module> findModule(String... moduleNames) {
+    	var list = new ArrayList<Module>();
+    	
+    	for(var moduleName: moduleNames) {
+    		list.add(findModule(moduleName));
+    	}
+    	
+    	return list;
+    }
     
     private static List<Class<?>> enumerateJarFile(URL url) {
     	// jar:file:///Users/hasegawa/git/yokwe-finance-data/target/yokwe-finance-data-2.0.0.jar!/yokwe/finance/data/
