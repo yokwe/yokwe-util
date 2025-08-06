@@ -27,10 +27,6 @@ public class GenerateMakefile {
 		logger.info("STOP");
 	}
 	
-	public static void generate(Module module, File file) {
-		var string = generate(module);
-		FileUtil.write().file(file, string);
-	}
 	public static String generate(Module module) {
 		var list = Makefile.scanModule(module);
 
