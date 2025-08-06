@@ -2,6 +2,7 @@ package yokwe.util.makefile;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -20,11 +21,10 @@ public class GenerateDot {
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		var moduleName = "yokwe.finance.data";
 		var dotFile    = new File("tmp/dot/a.dot");
+		var moduleList = ClassUtil.findModule("yokwe.finance.data", "yokwe.finance.report");
 		
-		var module = ClassUtil.findModule(moduleName);
-		var string = generate(module);
+		var string = generate(moduleList);
 		
 		logger.info("save   {}  {}", string.length(), dotFile);
 		FileUtil.write().file(dotFile, string);
@@ -32,16 +32,19 @@ public class GenerateDot {
 		logger.info("STOP");
 	}
 	
-	public static void generate(Module module, File file) {
-		var string = generate(module);
-		FileUtil.write().file(file, string);
+	public static String generate(Module... modules) {
+		Arrays.stream(modules).toList();
+		return generate(Arrays.stream(modules).toList());
 	}
-	public static String generate(Module module) {
+	public static String generate(List<Module> moduleList) {
 		var rootPath = Storage.storage.getFile().getAbsolutePath() + "/";
 		logger.info("rootPath  {}", rootPath);
 		
-		logger.info("moduleName  {}", module.getDescriptor().toNameAndVersion());
-		var makeList = Makefile.scanModule(module);
+		var makeList = new ArrayList<Makefile>();
+		for(var module: moduleList) {
+			logger.info("moduleName  {}", module.getDescriptor().toNameAndVersion());
+			makeList.addAll(Makefile.scanModule(module));
+		}
 		logger.info("makeList  {}", makeList.size());
 		
 		var taskList =  makeList.stream().map(o -> new Task(o, rootPath)).collect(Collectors.toList());
@@ -75,7 +78,7 @@ public class GenerateDot {
 		for(var group: taskMap.keySet()) {
 			for(var task: taskMap.get(group)) {
 				var colorIndex = getColorNumber(groupList, group);
-				g.node(task.target).attr("shape",  "box").attr("fillcolor", colorIndex).attr("peripheries", task.input.isEmpty() ? "2" : "1");
+				g.node(task.target).attr("label", task.module + "\\n" + task.target).attr("shape",  "box").attr("fillcolor", colorIndex).attr("peripheries", task.input.isEmpty() ? "2" : "1");
 			}
 		}
 		
@@ -105,12 +108,14 @@ public class GenerateDot {
 	}
 	private static class Task {
 		String       target;
+		String       module;
 		String       group;
 		List<String> input  = new ArrayList<>();
 		List<String> output = new ArrayList<>();
 		
 		Task(Makefile makefile, String rootPath) {
 			target = makefile.target;
+			module = makefile.clazz.getModule().getName();
 			group  = makefile.group;
 			for(var e: makefile.inputs)  input.add(e.getAbsolutePath().replace(rootPath, ""));
 			for(var e: makefile.outputs) output.add(e.getAbsolutePath().replace(rootPath, ""));
