@@ -258,12 +258,9 @@ public final class ClassUtil {
     	Collections.sort(list, (a, b) -> a.getTypeName().compareTo(b.getTypeName()));
     }
     //
-    // enumerate class file every package in named module
+    // enumerate class file every package in module
     //
-    public final static List<Class<?>> findClassInModule(String moduleName) {
-    	return findClassInModule(findModule(moduleName));
-    }
-    public final static List<Class<?>> findClassInModule(Module module) {
+     public final static List<Class<?>> findClassInModule(Module module) {
         var set = new HashSet<Class<?>>();
         for(var packageName: module.getPackages()) {
         	set.addAll(findClassInModule(module, packageName));
@@ -276,9 +273,6 @@ public final class ClassUtil {
     //
     // enumerate class file in named package in named module
     //
-    public final static List<Class<?>> findClassInModule(String moduleName, String packageName) {
-    	return findClassInModule(findModule(moduleName), packageName);
-    }
     public final static List<Class<?>> findClassInModule(Module module, String packageName) {
 		var url = module.getClassLoader().getResource(packageName.replace(".", "/"));
 		
