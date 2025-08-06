@@ -41,12 +41,12 @@ public class GenerateMakefile {
 			out.println("# module " + module.getDescriptor().toNameAndVersion());
 			out.println("#");
 			out.println();
-			out.println(".PHONY: update-data " + String.join(" ", groupUpdateSet));
+			out.println(".PHONY: update-all " + String.join(" ", groupUpdateSet));
 			out.println();
 			out.println("#");
-			out.println("# update-data");
+			out.println("# update-all");
 			out.println("#");
-			out.println("update-data: \\");
+			out.println("update-all: \\");
 			out.println("\t" + String.join(" \\\n\t", groupUpdateSet));
 			out.println();
 			out.println();
