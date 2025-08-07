@@ -11,35 +11,45 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import yokwe.util.json.JSON;
+
 public class Storage {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 	
 	public static void initialize() {};
 	
-	private static final String DATA_PATH_FILE = "../yokwe-base/data/DataPathLocation";
-	private static String getDataPath() {
-		logger.info("DATA_PATH_FILE  !{}!", DATA_PATH_FILE);
+	private static final String CONFIG_FILE = "data/storage.json";
+	
+	public static class Config {
+		public String path;
+		
+		@Override
+		public String toString() {
+			return ToString.withFieldName(this);
+		}
+	}
+	
+	private static File getDataFile() {
+		logger.info("CONFIG_FILE   !{}!", CONFIG_FILE);
+		var configFile = new File(CONFIG_FILE);
 		// Sanity check
-		if (!FileUtil.canRead(DATA_PATH_FILE)) {
-			throw new UnexpectedException("Cannot read file");
+		if (!configFile.canRead()) {
+			throw new UnexpectedException("Cannot read config file");
+		}
+		var config = JSON.unmarshal(Config.class, FileUtil.read().file(configFile));
+		logger.info("config        !{}!", config);
+		var dataFile = new File(config.path);
+		// sanity check
+		if (!dataFile.isDirectory()) {
+			logger.error("Not directory");
+			logger.error("  dataFile  {}", dataFile.getPath());
+			throw new UnexpectedException("Not directory");
 		}
 		
-		String dataPath = FileUtil.read().file(DATA_PATH_FILE);
-		logger.info("DATA_PATH       !{}!", dataPath);
-		// Sanity check
-		if (dataPath.isEmpty()) {
-			logger.error("Empty dataPath");
-			throw new UnexpectedException("Empty dataPath");
-		}		
-		if (!FileUtil.isDirectory(dataPath)) {
-			logger.error("Not directory");
-			throw new UnexpectedException("Not directory");
-		}		
-		return dataPath;
+		return dataFile;
 	}
-	private static final String DATA_PATH = getDataPath();
 	
-	public static final Storage storage = new Storage(new File(DATA_PATH));
+	public static final Storage storage = new Storage(getDataFile());
 
 	private final File file;
 	private Storage(File file) {
