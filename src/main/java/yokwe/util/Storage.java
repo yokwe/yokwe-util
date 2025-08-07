@@ -30,14 +30,14 @@ public class Storage {
 	}
 	
 	private static File getDataFile() {
-		logger.info("CONFIG_FILE   !{}!", CONFIG_FILE);
+		logger.info("CONFIG_FILE   {}", CONFIG_FILE);
 		var configFile = new File(CONFIG_FILE);
 		// Sanity check
 		if (!configFile.canRead()) {
 			throw new UnexpectedException("Cannot read config file");
 		}
 		var config = JSON.unmarshal(Config.class, FileUtil.read().file(configFile));
-		logger.info("config        !{}!", config);
+		logger.info("config        {}", config);
 		var dataFile = new File(config.path);
 		// sanity check
 		if (!dataFile.isDirectory()) {
