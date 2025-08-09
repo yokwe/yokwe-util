@@ -132,7 +132,7 @@ public class ColorUtil {
 		ret[0] = palette[0];
 		ret[newPaletteSize - 1] = palette[palette.length - 1];
 		
-		logger.info("XX  oldPaletteSize  {}  newPaletteSize  {}", oldPaletteSize, newPaletteSize);
+//		logger.info("XX  oldPaletteSize  {}  newPaletteSize  {}", oldPaletteSize, newPaletteSize);
 
 		if (oldPaletteSize == newPaletteSize) {
 			// special case  -- same size
@@ -150,9 +150,8 @@ public class ColorUtil {
 				var oldPos  = oldIndex * oldDelta;
 				var diffPos = newPos - oldPos;
 				
-//				logger.info("##  {}  newPos  {}  oldIndex  {}  oldPos  {}  diffPos  {}", i, newPos, oldIndex, oldPos, diffPos);
-				logger.info("{}", String.format("##  %2d  newPos  %.5f  oldIndex  %2d  oldPos  %.5f  diffPos  %.5f  ratioOfA  %.5f",
-						i, newPos, oldIndex, oldPos, diffPos, diffPos / oldDelta));
+//				logger.info("{}", String.format("##  %2d  newPos  %.5f  oldIndex  %2d  oldPos  %.5f  diffPos  %.5f  ratioOfA  %.5f",
+//					i, newPos, oldIndex, oldPos, diffPos, diffPos / oldDelta));
 				
 				if (newPaletteSize <= oldPaletteSize || Math.abs(diffPos) < 0.00001) {
 					ret[i] = palette[oldIndex];
