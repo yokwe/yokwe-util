@@ -5,30 +5,31 @@ import java.util.Arrays;
 public class ColorUtil {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 	
-	public static RGB[] MONO_N2 = RGB.fromString(
-		"#000000", "#ffffff");
-	public static RGB[] RG_N2 = RGB.fromString(
-		"#00FF00", "#ff0000");
+	public static class Palette {
+		public static RGB[] MONO_N2 = RGB.fromString(
+			"#000000", "#ffffff");
+		public static RGB[] RGB_N3 = RGB.fromString(
+			"#FF0000", "#00FF00", "#0000FF");
 
-	public static RGB[] SET3_N3 = RGB.fromString(
-		"#8dd3c7", "#ffffb3", "#bebada");
+		public static RGB[] SET3_N3 = RGB.fromString(
+			"#8dd3c7", "#ffffb3", "#bebada");
+			
+		public static RGB[] SET3_N4 = RGB.fromString(
+			"#8dd3c7", "#ffffb3", "#bebada", "#fb8072");
 		
-	public static RGB[] SET3_N4 = RGB.fromString(
-		"#8dd3c7", "#ffffb3", "#bebada", "#fb8072");
-	
-	// https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
-	public static RGB[] SET3_N12 = RGB.fromString(
-		"#a6cee3", "#1f78b4", "#b2df8a",
-		"#33a02c", "#fb9a99", "#e31a1c",
-		"#fdbf6f", "#ff7f00", "#cab2d6",
-		"#6a3d9a", "#ffff99", "#b15928");
-	
-	public static RGB[] PAIRED_N12 = RGB.fromString(
-		"#a6cee3", "#1f78b4", "#b2df8a",
-		"#33a02c", "#fb9a99", "#e31a1c",
-		"#fdbf6f", "#ff7f00", "#cab2d6",
-		"#6a3d9a", "#ffff99", "#b15928");
-	
+		// https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
+		public static RGB[] SET3_N12 = RGB.fromString(
+			"#a6cee3", "#1f78b4", "#b2df8a",
+			"#33a02c", "#fb9a99", "#e31a1c",
+			"#fdbf6f", "#ff7f00", "#cab2d6",
+			"#6a3d9a", "#ffff99", "#b15928");
+		
+		public static RGB[] PAIRED_N12 = RGB.fromString(
+			"#a6cee3", "#1f78b4", "#b2df8a",
+			"#33a02c", "#fb9a99", "#e31a1c",
+			"#fdbf6f", "#ff7f00", "#cab2d6",
+			"#6a3d9a", "#ffff99", "#b15928");
+	}
 	
 	public static RGB interpolate(RGB[] palette, int indexTotal, int index) {
 		return interpolate(palette, indexTotal)[index];
@@ -182,9 +183,7 @@ public class ColorUtil {
 		for (int n = 2; n < 24; n++){
 			sb.append("n = " + n);
 			sb.append("<table><tr>");
-//			var palette = interpolate(BW_N2, n);
-			var palette = interpolate(RG_N2, n);
-//			var palette = interpolate(SET3_N12, n);
+			var palette = interpolate(Palette.RGB_N3, n);
 			
 			for(int i = 0; i < n; i++) {
 				sb.append("<td bgcolor=" + palette[i].toString() + ">XXXX</td>");
