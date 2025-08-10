@@ -1,6 +1,8 @@
 package yokwe.util.libreoffice;
 
 import java.io.Closeable;
+import java.time.Duration;
+import java.util.Set;
 
 import com.sun.star.beans.PropertyState;
 import com.sun.star.beans.PropertyValue;
@@ -20,11 +22,47 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.CloseVetoException;
 import com.sun.star.util.XCloseable;
 
+import yokwe.util.ThreadUtil;
 import yokwe.util.UnexpectedException;
 
 public abstract class LibreOffice implements Closeable {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-
+	
+	private static void killLibreOffceProcess() {
+		var validCommandSet = Set.of(
+			"/Applications/LibreOffice.app/Contents/MacOS/soffice"
+		);
+		var username = System.getProperty("user.name");
+		
+		{
+			var list = ProcessHandle.allProcesses().filter(o -> validCommandSet.contains(o.info().command().orElse("")) && o.info().user().orElse("").equals(username) && o.isAlive()).toList();
+			if (list.isEmpty()) return;
+			
+			for(var e: list) e.destroy();
+			ThreadUtil.sleep(Duration.ofSeconds(1));
+		}
+		{
+			var list = ProcessHandle.allProcesses().filter(o -> validCommandSet.contains(o.info().command().orElse("")) && o.info().user().orElse("").equals(username) && o.isAlive()).toList();
+			if (list.isEmpty()) return;
+			
+			for(var e: list) e.destroyForcibly();
+			ThreadUtil.sleep(Duration.ofSeconds(1));
+		}
+		{
+			var list = ProcessHandle.allProcesses().filter(o -> validCommandSet.contains(o.info().command().orElse("")) && o.info().user().orElse("").equals(username) && o.isAlive()).toList();
+			if (list.isEmpty()) return;
+			
+			logger.error("Unexpected");
+			logger.error("  username  {}", username);
+			for(var e: list) logger.error("  {}  {}", e.toString(), e.info().command().orElse("???"));
+			throw new UnexpectedException("Unexpected");
+		}
+	}
+	static {
+		// kill LibreOoffice process
+		killLibreOffceProcess();
+	}
+	
 	private static final String[] bootstrapOptions = {
 			"--minimized",
 			"--headless",
