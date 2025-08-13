@@ -2,14 +2,15 @@
 #
 #
 
-SELENIUM_DATA_PATH_FILE := data/SeleniumDataPathLocation
-SELENIUM_DATA_PATH      := $(shell cat $(SELENIUM_DATA_PATH_FILE))
-CHROME_FOR_TESTING_DIR  := $(SELENIUM_DATA_PATH)/chrome-for-testing
+DATA_PATH      := $(shell jq <data/storage.json -r '.path')
+SELENIUM_PATH  := $(DATA_PATH)selenium
+
+CHROME_FOR_TESTING_DIR  := $(SELENIUM_PATH)/chrome-for-testing
 
 CHROME_FOR_TESTING_VERSION_FILE := data/ChromeForTestingVersion
 CHROME_FOR_TESTING_VERSION      := $(shell cat $(CHROME_FOR_TESTING_VERSION_FILE))
 
-all: check-selenium-data-path
+all: check-selenium-path
 	@echo "CHROME_FOR_TESTING_VERSION  $(CHROME_FOR_TESTING_VERSION)"
 	@echo "CHROME_FOR_TESTING_DIR      $(CHROME_FOR_TESTING_DIR)"
 
@@ -20,11 +21,10 @@ full-build:
 	mvn clean ant:ant install
 
 
-check-selenium-data-path:
-	@echo "SELENIUM_DATA_PATH_FILE  !$(SELENIUM_DATA_PATH_FILE)!"
-	@echo "SELENIUM_DATA_PATH       !$(SELENIUM_DATA_PATH)!"
-	@if [ ! -d $(SELENIUM_DATA_PATH) ]; then \
-		echo "no directory  !${SELENIUM_DATA_PATH}!" ; \
+check-selenium-path:
+	@echo "SELENIUM_PATH       !$(SELENIUM_PATH)!"
+	@if [ ! -d $(SELENIUM_PATH) ]; then \
+		echo "no directory  !${SELENIUM_PATH}!" ; \
 		exit 1 ; \
 	fi
 
@@ -37,7 +37,7 @@ check-chrome-for-testing:
 	fi
 
 
-download-chrome-for-testing: check-selenium-data-path
+download-chrome-for-testing: check-selenium-path
 	echo "chrome for testing version $(CHROME_FOR_TESTING_VERSION)"; \
 	mkdir -p $(CHROME_FOR_TESTING_DIR); \
 	curl -s --output $(CHROME_FOR_TESTING_DIR)/chrome-version https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_$(CHROME_FOR_TESTING_VERSION); \
@@ -51,7 +51,7 @@ download-chrome-for-testing: check-selenium-data-path
 	ls -lha $(CHROME_FOR_TESTING_DIR)/$${chrome_version}
 
 
-setup-chrome-for-testing: check-selenium-data-path
+setup-chrome-for-testing: check-selenium-path
 	echo "chrome for testing version $(CHROME_FOR_TESTING_VERSION)"; \
 	mkdir -p $(CHROME_FOR_TESTING_DIR); \
 	chrome_version=`/bin/cat $(CHROME_FOR_TESTING_DIR)/chrome-version`; \
