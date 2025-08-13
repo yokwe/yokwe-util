@@ -8,7 +8,7 @@ import java.util.List;
 import yokwe.util.AutoIndentPrintWriter;
 
 public class Dot {
-	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
+//	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 
 	interface Statement {
 		public void output(AutoIndentPrintWriter out);
@@ -288,31 +288,4 @@ public class Dot {
 			}
 		}
 	}
-	
-	
-	public static void main(String[] args) {
-		logger.info("START");
-		
-		{
-			var g = new Digraph("G");
-			g.edge("Hello", "World");
-			g.attr("fontname", "Helvetica");
-			g.nodeAttr("fontname", "Helvetica").attr("X", "Y");
-			g.edgeAttr("fontname", "Helvetica").attr("A", "B").attr("C", "D");
-			g.edgeAttr().attr("fontname", "TimeRoman").attr("A", "B").attr("C", "D");
-			
-			{
-				var s = g.subgraph("cluster_0");
-				s.attr("style", "filled")
-				.edge("a0", "a1", "a2", "a3");
-			}
-			
-			logger.info("===============================");
-			logger.info("{}", g);
-			logger.info("===============================");
-		}
-		
-		logger.info("STOP");
-	}
-
 }

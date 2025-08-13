@@ -112,16 +112,4 @@ public class Makefile implements Comparable<Makefile> {
 		Collections.sort(list);
 		return list;
 	}
-	
-	public static void main(String[] args) {
-		logger.info("START");
-		
-		var module = ClassUtil.findModule("yokwe.finance");
-		var list = Makefile.scanModule(module);
-		for(var e: list) {
-			logger.info("XX  {}", e.clazz.getTypeName());
-		}
-		
-		logger.info("STOP");
-	}
 }
