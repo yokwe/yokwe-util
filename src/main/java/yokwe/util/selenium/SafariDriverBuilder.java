@@ -1,7 +1,5 @@
 package yokwe.util.selenium;
 
-import java.time.Duration;
-
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.safari.SafariDriverService;
 import org.openqa.selenium.safari.SafariOptions;
@@ -9,7 +7,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 
 public class SafariDriverBuilder {
-	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
+//	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 	
 	// redirect java.util.logging to slf4j
 	static {
@@ -41,6 +39,8 @@ public class SafariDriverBuilder {
 	}
 	
 	public static void main(String[] args) {
+		var logger = yokwe.util.LoggerUtil.getLogger();
+		
 		logger.info("START");
 		
 		{
@@ -55,7 +55,7 @@ public class SafariDriverBuilder {
 				logger.info("wait");
 				driver.wait.pageTransition();
 				logger.info("sleep");
-				driver.sleep(Duration.ofSeconds(10));
+				driver.sleep(java.time.Duration.ofSeconds(2));
 			} finally {
 				driver.quit();
 			}

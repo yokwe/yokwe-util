@@ -137,4 +137,29 @@ public class ChromeDriverBuilder {
 			return new ChromeDriver(service, options);
 		}
 	}
+	
+	public static void main(String[] args) {
+		var logger = yokwe.util.LoggerUtil.getLogger();
+		
+		logger.info("START");
+		
+		{
+			logger.info("driver");
+			var driver = new WebDriverWrapper<ChromeDriver>(ChromeDriverBuilder.builder().build());
+			try {
+				logger.info("get");
+				driver.get("https://sonybank.jp/pages/db/dbca0100/?lang=ja");
+				logger.info("wait");
+				driver.wait.pageTransition();
+				logger.info("sleep");
+				driver.sleep(java.time.Duration.ofSeconds(2));
+			} finally {
+				driver.quit();
+			}
+			
+			logger.info("done");
+		}
+		
+		logger.info("STOP");
+	}
 }
