@@ -7,8 +7,6 @@
 <project name="yokwe-util" default="package" basedir=".">
 	<import file="maven-build.xml" />
 
-	<property name="logback.conf" value="data/logback.xml" />
-
 	<path id="target.jar">
 		<pathelement location="${maven.build.dir}/${maven.build.finalName}.jar" />
 	</path>
@@ -22,7 +20,6 @@
 			<modulepath refid="build.classpath" />
 			<modulepath refid="target.jar" />
 			<classpath  refid="libreoffice.lib" />
-			<sysproperty key="logback.configurationFile" value="${logback.conf}" />
 		</java>
 	</target>
 
