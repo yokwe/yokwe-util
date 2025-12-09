@@ -102,16 +102,20 @@ public class Storage {
 	
 	
 	//
+	// LoadSave
+	//
+	public interface LoadSave {
+	}
+	
+	//
 	// LoadSaveFileXXX
 	//
-	public interface LoadSave {}
-	
-	public abstract static class LoadSaveFileGeneric<T> implements LoadSave {
+	public static class LoadSaveFile implements LoadSave {
 		protected final Storage  storage;
 		protected final String   name;
 		protected final File     file;
 		
-		public LoadSaveFileGeneric(Storage storage, String name) {
+		public LoadSaveFile(Storage storage, String name) {
 			this.storage = storage;
 			this.name    = name;
 			this.file    = storage.getFile(name);
@@ -130,7 +134,12 @@ public class Storage {
 				FileUtil.copy(getFile(), getOldFile());
 			}
 		}
-
+	}
+	public abstract static class LoadSaveFileGeneric<T> extends LoadSaveFile {
+		public LoadSaveFileGeneric(Storage storage, String name) {
+			super(storage, name);
+		}
+		
 		public abstract T      load();
 		public abstract void   save(T value);
 		public abstract String read();
@@ -213,13 +222,13 @@ public class Storage {
 	//
 	// LoadSaveDirectoryXXX
 	//
-	public abstract static class LoadSaveDirectoryGeneric<T> implements LoadSave {
+	public static class LoadSaveDirectory implements LoadSave {
 		protected final Storage                  storage;
 		protected final String                   prefix;
 		protected final Function<String, String> opName;
 		protected final File                     dir;
 		
-		public LoadSaveDirectoryGeneric(Storage storage, String prefix, Function<String, String> opName) {
+		public LoadSaveDirectory(Storage storage, String prefix, Function<String, String> opName) {
 			this.storage = storage;
 			this.prefix  = prefix;
 			this.opName  = opName;
@@ -231,12 +240,9 @@ public class Storage {
 		public File getFile(String name) {
 			return new File(dir, getFilename(name));
 		}
-
-		public abstract T      load(String name);
-		public abstract void   save(String name, T value);
-		public abstract String read(String name);
-		public abstract void   write(String name, String value);
-
+		//
+		// touch file
+		//
 		public void touch() {
 			FileUtil.touch(getTouchFile());
 		}
@@ -259,6 +265,16 @@ public class Storage {
 			Set<String> validFilenameSet = validNameCollection.stream().map(o -> getFilename(o)).collect(Collectors.toSet());
 			FileUtil.moveUnknownFile(validFilenameSet, getDir(), getDirDelist(), dryRun);
 		}
+	}
+	public abstract static class LoadSaveDirectoryGeneric<T> extends LoadSaveDirectory {
+		public abstract T      load(String name);
+		public abstract void   save(String name, T value);
+		public abstract String read(String name);
+		public abstract void   write(String name, String value);
+		
+		public LoadSaveDirectoryGeneric(Storage storage, String prefix, Function<String, String> opName) {
+			super(storage, prefix, opName);
+		}		
 	}
 	public static class LoadSaveDirectoryString extends LoadSaveDirectoryGeneric<String> {
 		public LoadSaveDirectoryString(Storage storage, String prefix, Function<String, String> opName) {

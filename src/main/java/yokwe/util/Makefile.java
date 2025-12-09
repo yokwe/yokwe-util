@@ -37,11 +37,11 @@ public class Makefile implements Comparable<Makefile> {
 		}
 		public Builder output(Storage.LoadSave... newValues) {
 			for(var newValue: newValues) {
-				if (newValue instanceof Storage.LoadSaveFileGeneric) {
-					var loadSave = (Storage.LoadSaveFileGeneric<?>)newValue;
+				if (newValue instanceof Storage.LoadSaveFile) {
+					var loadSave = (Storage.LoadSaveFile)newValue;
 					outputList.add(loadSave.getFile());
-				} else if (newValue instanceof Storage.LoadSaveDirectoryGeneric) {
-					var loadSave = (Storage.LoadSaveDirectoryGeneric<?>)newValue;
+				} else if (newValue instanceof Storage.LoadSaveDirectory) {
+					var loadSave = (Storage.LoadSaveDirectory)newValue;
 					outputList.add(loadSave.getTouchFile());
 				} else {
 					logger.error("Unexpected newValues");
