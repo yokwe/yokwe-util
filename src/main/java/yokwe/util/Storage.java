@@ -1,6 +1,7 @@
 package yokwe.util;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -264,6 +265,12 @@ public class Storage {
 		public void delistUnknownFile(Collection<String> validNameCollection, boolean dryRun) {
 			Set<String> validFilenameSet = validNameCollection.stream().map(o -> getFilename(o)).collect(Collectors.toSet());
 			FileUtil.moveUnknownFile(validFilenameSet, getDir(), getDirDelist(), dryRun);
+		}
+		//
+		// delete file
+		//
+		public void deleteFiles(FileFilter filterOp) {
+			FileUtil.deleteFile(dir, filterOp);
 		}
 	}
 	public abstract static class LoadSaveDirectoryGeneric<T> extends LoadSaveDirectory {
