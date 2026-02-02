@@ -3,6 +3,7 @@ package yokwe.util.json;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -55,6 +56,10 @@ public class Marshal {
 			marshalArray(gen, object, name);
 			return;
 		}
+		if (object instanceof java.util.List) {
+			marshalList(gen, object, name);
+			return;
+		}
 		
 		// process common java class
 		var typeName  = clazz.getTypeName();
@@ -91,6 +96,20 @@ public class Marshal {
 		int arrayLength = Array.getLength(object);
 		for(var i = 0; i < arrayLength; i++) {
 			var element = Array.get(object, i);
+			marshal(gen, element);
+		}
+		
+		gen.writeEnd();
+	}
+	private static void marshalList(JsonGenerator gen, Object object, String name) {
+		if (name == null) {
+			gen.writeStartArray();
+		} else {
+			gen.writeStartArray(name);
+		}
+		
+		var list = (List<?>)object;
+		for(var element: list) {
 			marshal(gen, element);
 		}
 		
@@ -140,8 +159,10 @@ public class Marshal {
 		for(var fieldInfo: fieldInfoArray) {
 			if (fieldInfo.ignore) continue;
 			
-			if (fieldInfo.type.equals(java.util.Map.class)) {
+			if (object instanceof java.util.Map) {
 				marshalMap(gen, fieldInfo.get(object), fieldInfo);
+			} else if (object instanceof java.util.List) {
+				marshalList(gen, fieldInfo.get(object), fieldInfo.jsonName);
 			} else {
 				marshal(gen, fieldInfo.get(object), fieldInfo.jsonName);
 			}
