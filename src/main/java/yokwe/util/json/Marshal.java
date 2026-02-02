@@ -1,7 +1,6 @@
 package yokwe.util.json;
 
 import java.io.StringWriter;
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -93,9 +92,8 @@ public class Marshal {
 			gen.writeStartArray(name);
 		}
 		
-		int arrayLength = Array.getLength(object);
-		for(var i = 0; i < arrayLength; i++) {
-			var element = Array.get(object, i);
+		var array = (Object[]) object;
+		for(var element: array) {
 			marshal(gen, element);
 		}
 		
@@ -161,8 +159,6 @@ public class Marshal {
 			
 			if (object instanceof java.util.Map) {
 				marshalMap(gen, fieldInfo.get(object), fieldInfo);
-			} else if (object instanceof java.util.List) {
-				marshalList(gen, fieldInfo.get(object), fieldInfo.jsonName);
 			} else {
 				marshal(gen, fieldInfo.get(object), fieldInfo.jsonName);
 			}
