@@ -1,6 +1,10 @@
 package yokwe.util;
 
+import java.io.BufferedWriter;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,23 +20,33 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 	public AutoIndentPrintWriter(PrintWriter out) {
 		this.out = out;
 	}
+	public AutoIndentPrintWriter(OutputStream os) {
+		this(new OutputStreamWriter(os));
+	}
+	public AutoIndentPrintWriter(Writer w) {
+		this(new PrintWriter(new BufferedWriter(w)));
+	}
+
+	@Override
 	public void close() {
 		out.close();
 	}
-	public void println() {
+
+	public AutoIndentPrintWriter println() {
 		out.println();
+		return this;
 	}
-	
+
 	private String stripString(String string) {
 		StringBuffer ret = new StringBuffer();
-		
+
 		boolean insideDoubleQuote = false;
-		
+
 		int length = string.length();
 		for(int i = 0; i < length; i++) {
 			char c1 = string.charAt(i);
 			char c2 = (i == length - 1) ? '\0' : string.charAt(i + 1);
-			
+
 			// line comment
 			if ((!insideDoubleQuote) && c1 == '/' && c2 == '/') {
 				break;
@@ -43,7 +57,7 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 				logger.error("  string {}!", string);
 				throw new UnexpectedException("level < 0");
 			}
-			
+
 			if (insideDoubleQuote) {
 				//
 			} else {
@@ -58,18 +72,18 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 					throw new UnexpectedException("level < 0");
 				}
 			}
-			
+
 			// \" can be appeared inside double quote
 			if (c1 == '\\' && c2 == '"') {
 				i++; // advance i to skip backslash
 				continue;
 			}
-			
+
 			if (c1 == '"') {
 				insideDoubleQuote = !insideDoubleQuote;
 				continue;
 			}
-			
+
 			if (!insideDoubleQuote) {
 				switch(c1) {
 				case '{':
@@ -83,23 +97,24 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 				}
 			}
 		}
-		
+
 		return ret.toString();
 	}
-	
+
 	private boolean layout = false;
 	private List<String> layoutLineList = new ArrayList<>();
 
-	public void println(String string) {
+	public AutoIndentPrintWriter println(String string) {
 		if (layout) {
 			layoutLineList.add(string);
 		} else {
 			printlnInternal(string);
 		}
+		return this;
 	}
 	private void printlnInternal(String string) {
 		String strippedString = stripString(string);
-		
+
 		// adjust level
 		for(char c: strippedString.toCharArray()) {
 			switch (c) {
@@ -121,13 +136,19 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 		int adjustLevel = 0;
 		{
 			String s = string.trim();
-			if (s.startsWith("case " ))   adjustLevel = -1;
-			if (s.startsWith("default:")) adjustLevel = -1;
+			if (s.startsWith("case " )) {
+				adjustLevel = -1;
+			}
+			if (s.startsWith("default:")) {
+				adjustLevel = -1;
+			}
 		}
-		
-		for(int i = 0; i < (level + adjustLevel); i++) out.print(INDENT); 
+
+		for(int i = 0; i < (level + adjustLevel); i++) {
+			out.print(INDENT);
+		}
 		out.println(string);
-		
+
 		// adjust level
 		for(char c: strippedString.toCharArray()) {
 			switch (c) {
@@ -149,11 +170,12 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 			}
 		}
 	}
-	public void println(String format, Object... args) {
+	public AutoIndentPrintWriter println(String format, Object... args) {
 		String string = String.format(format, args);
 		println(string);
+		return this;
 	}
-	
+
 	public enum Layout {
 		LEFT, RIGHT
 	}
@@ -162,7 +184,7 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 			logger.error("Unexpected state");
 			throw new UnexpectedException("Unexpected state");
 		}
-		
+
 		layout = true;
 		layoutLineList.clear();
 	}
@@ -188,19 +210,21 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 				for(int j = 0; j < token.length; j++) {
 					tokens[i][j] = token[j];
 				}
-			}	
+			}
 		}
-		
+
 		int width[] = new int[count];
 		{
-			for(int i = 0; i < width.length; i++) width[i] = 0;
+			for(int i = 0; i < width.length; i++) {
+				width[i] = 0;
+			}
 			for(int i = 0; i < tokens.length; i++) {
 				for(int j = 0; j < width.length; j++) {
 					width[j] = Math.max(width[j], tokens[i][j].length());
 				}
 			}
 		}
-		
+
 		final String format;
 		{
 			List<String> list = new ArrayList<>();
@@ -213,15 +237,15 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 			}
 			format = String.join(" ", list);
 		}
-		
+
 		for(int i = 0; i < tokens.length; i++) {
 			String string = String.format(format, (Object[])tokens[i]);
 			printlnInternal(string);
 		}
-		
+
 		//
 		layout = false;
 		layoutLineList.clear();
 	}
-	
+
 }
