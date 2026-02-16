@@ -17,7 +17,7 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 	private final PrintWriter out;
 	private int level = 0;
 
-	public AutoIndentPrintWriter(PrintWriter out) {
+	private AutoIndentPrintWriter(PrintWriter out) {
 		this.out = out;
 	}
 	public AutoIndentPrintWriter(OutputStream os) {
@@ -31,6 +31,7 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 	public void close() {
 		out.close();
 	}
+
 
 	public AutoIndentPrintWriter println() {
 		out.println();
