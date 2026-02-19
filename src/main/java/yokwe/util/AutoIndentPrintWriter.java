@@ -113,6 +113,11 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 		}
 		return this;
 	}
+	public AutoIndentPrintWriter printlnRaw(String string) {
+		out.println(string);
+		return this;
+	}
+
 	private void printlnInternal(String string) {
 		String strippedString = stripString(string);
 
