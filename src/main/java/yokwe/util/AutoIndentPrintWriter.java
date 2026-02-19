@@ -117,21 +117,24 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 		String strippedString = stripString(string);
 
 		// adjust level
-		for(char c: strippedString.toCharArray()) {
-			switch (c) {
-			case '}':
-				level--;
-				if (level < 0) {
-					logger.error("level < 0");
-					logger.error("  string {}!", string);
-					logger.error("  strippedString {}!", strippedString);
-					throw new UnexpectedException("level < 0");
-				}
-				break;
-			default:
-				break;
-			}
-		}
+//		for(char c: strippedString.toCharArray()) {
+//			switch (c) {
+//			case '{':
+//				level++;
+//				break;
+//			case '}':
+//				level--;
+//				if (level < 0) {
+//					logger.error("level < 0");
+//					logger.error("  string {}!", string);
+//					logger.error("  strippedString {}!", strippedString);
+//					throw new UnexpectedException("level < 0");
+//				}
+//				break;
+//			default:
+//				break;
+//			}
+//		}
 
 		// special handling for case and default
 		int adjustLevel = 0;
@@ -141,6 +144,12 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 				adjustLevel = -1;
 			}
 			if (s.startsWith("default:")) {
+				adjustLevel = -1;
+			}
+			if (s.endsWith("};")) {
+				adjustLevel = -1;
+			}
+			if (s.endsWith("}")) {
 				adjustLevel = -1;
 			}
 		}
@@ -153,6 +162,7 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 		// adjust level
 		for(char c: strippedString.toCharArray()) {
 			switch (c) {
+			case '}':
 			case ')':
 				level--;
 				if (level < 0) {
