@@ -1,10 +1,14 @@
 package yokwe.util;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +24,28 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 	private AutoIndentPrintWriter(PrintWriter out) {
 		this.out = out;
 	}
-	public AutoIndentPrintWriter(OutputStream os) {
-		this(new OutputStreamWriter(os));
-	}
 	public AutoIndentPrintWriter(Writer w) {
 		this(new PrintWriter(new BufferedWriter(w)));
 	}
+	public AutoIndentPrintWriter(OutputStream os) {
+		this(new OutputStreamWriter(os));
+	}
+	public AutoIndentPrintWriter(File file) {
+		 this(toFileOutputStream(file));
+	}
+	public AutoIndentPrintWriter(Path path) {
+		this(path.toFile());
+	}
+	private static FileOutputStream toFileOutputStream(final File file) {
+		 try {
+			return new FileOutputStream(file);
+		 } catch (IOException e) {
+			var exceptionName = e.getClass().getSimpleName();
+			logger.error("{} {}", exceptionName, e);
+			throw new UnexpectedException(exceptionName, e);
+		 }
+	}
+
 
 	@Override
 	public void close() {
