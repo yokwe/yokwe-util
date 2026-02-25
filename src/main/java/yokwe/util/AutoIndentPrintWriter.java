@@ -171,6 +171,15 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 			if (s.startsWith("default:")) {
 				adjustLevel = -1;
 			}
+			if (s.startsWith("public:")) {
+				adjustLevel = -1;
+			}
+			if (s.startsWith("private:")) {
+				adjustLevel = -1;
+			}
+			if (s.startsWith("protected:")) {
+				adjustLevel = -1;
+			}
 			if (s.endsWith("};")) {
 				adjustLevel = -1;
 			}
