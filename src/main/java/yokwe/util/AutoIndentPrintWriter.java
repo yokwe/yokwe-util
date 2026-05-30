@@ -180,12 +180,15 @@ public class AutoIndentPrintWriter implements AutoCloseable {
 			if (s.startsWith("protected:")) {
 				adjustLevel = -1;
 			}
-			if (s.endsWith("};")) {
+//			if (s.endsWith("};")) {
+//				adjustLevel = -1;
+//			}
+			if (s.startsWith("}")) {
 				adjustLevel = -1;
 			}
-			if (s.endsWith("}")) {
-				adjustLevel = -1;
-			}
+//			if (s.endsWith("}")) {
+//				adjustLevel = -1;
+//			}
 		}
 
 		for(int i = 0; i < (level + adjustLevel); i++) {
