@@ -6,7 +6,7 @@ import java.net.MalformedURLException;
 
 public class StringUtil {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	//
 	// removeBOM
 	//
@@ -17,11 +17,13 @@ public class StringUtil {
 	}
 	public static String removeBOM(String string) {
 		// handle special case first
-		if (string.isEmpty()) return string;
-		
+		if (string.isEmpty()) {
+			return string;
+		}
+
 		return (isBOM(string.charAt(0))) ? string.substring(1) : string;
 	}
-	
+
 	//
 	// toHexString
 	//
@@ -42,7 +44,7 @@ public class StringUtil {
 			charArray[i * 4 + 0] = HEX_ARRAY[(c >>> 12) & 0x0F];
 			charArray[i * 4 + 1] = HEX_ARRAY[(c >>>  8) & 0x0F];
 			charArray[i * 4 + 2] = HEX_ARRAY[(c >>>  4) & 0x0F];
-			charArray[i * 4 + 4] = HEX_ARRAY[(c >>>  0) & 0x0F];
+			charArray[i * 4 + 3] = HEX_ARRAY[(c >>>  0) & 0x0F];
 		}
 		return "(" + string.length() + ")" + new String(charArray);
 	}
@@ -58,11 +60,11 @@ public class StringUtil {
 				logger.error("  from {}  !{}!", fromString.length(), fromString);
 				logger.error("  to   {}  !{}!", toString.length(), toString);
 				throw new UnexpectedException("length not equal");
-			}				
+			}
 		}
-		
+
 		StringBuilder result = new StringBuilder(string.length());
-		
+
 		for(var c: string.toCharArray()) {
 			var index = fromString.indexOf(c);
 			if (index == -1) {
@@ -71,7 +73,7 @@ public class StringUtil {
 				result.append(toString.charAt(index));
 			}
 		}
-		
+
 		return result.toString();
 	}
 	private static final String HALFWIDTH_STRING = "" +
@@ -84,7 +86,7 @@ public class StringUtil {
 			",./<>?" +
 			"ｱｲｳｴｵ" +
 			"ｶｷｸｹｵ" +
-			"ｻｼｽｾﾄ" + 
+			"ｻｼｽｾﾄ" +
 			"ﾀﾁﾂﾃﾄ" +
 			"ﾅﾆﾇﾈﾉ" +
 			"ﾊﾋﾌﾍﾎ" +
@@ -112,7 +114,7 @@ public class StringUtil {
 			"ラリルレロ" +
 			"ワヲン" +
 			"　";
-	
+
 	//
 	// toFullWidth
 	//
@@ -125,8 +127,8 @@ public class StringUtil {
 	public static String toHalfWidth(String string) {
 		return replaceCharacter(HALFWIDTH_STRING, FULLWIDTH_STRING, string);
 	}
-	
-	
+
+
 	//
 	// toURLString
 	//
