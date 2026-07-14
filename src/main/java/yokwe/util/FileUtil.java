@@ -18,6 +18,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
@@ -266,7 +267,9 @@ public class FileUtil {
 
 	// delete
 	public static void delete(File file) {
-		if (file.isFile()) {
+		if (!file.exists()) {
+			// do nothing
+		} else if (file.isFile()) {
 			file.delete();
 		} else if (file.isDirectory()) {
 			try (Stream<Path> walk = Files.walk(file.toPath())) {
@@ -277,7 +280,12 @@ public class FileUtil {
 				throw new UnexpectedException(exceptionName, e);
 			}
 		} else {
-			throw new UnexpectedException("Unexpected");
+			logger.error("Unexpected file type");
+			logger.error("  file         {}", file.getPath());
+			logger.error("  exists       {}", file.exists());
+			logger.error("  isFile       {}", file.isFile());
+			logger.error("  isDirectory  {}", file.isDirectory());
+			throw new UnexpectedException("Unexpected file type");
 		}
 	}
 
@@ -328,6 +336,8 @@ public class FileUtil {
 				}
 			} catch (FileNotFoundException e) {
 				logger.warn("FileNotFoundException  {}", file.toPath().toString());
+			} catch (NoSuchFileException e) {
+				logger.warn("NoSuchFileException    {}", file.toPath().toString());
 			} catch (IOException e) {
 				String exceptionName = e.getClass().getSimpleName();
 				logger.error("{} {}", exceptionName, e.toString());
