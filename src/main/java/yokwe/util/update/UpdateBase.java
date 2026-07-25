@@ -19,21 +19,21 @@ import yokwe.util.UnexpectedException;
 
 public abstract class UpdateBase {
 	static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	protected static final int EX_OK    = 0;
 	protected static final int EX_ERROR = 1;
-	
+
 	public abstract void update();
-	
+
 	public static void callUpdate() {
-		Class<?> callerClass = StackWalkerUtil.getCallerStackFrame(StackWalkerUtil.OFFSET_CALLER).getDeclaringClass();		
+		Class<?> callerClass = StackWalkerUtil.getCallerStackFrame(StackWalkerUtil.OFFSET_CALLER).getDeclaringClass();
 		// sanity check
 		if (!UpdateBase.class.isAssignableFrom(callerClass)) {
 			logger.error("Unexpctected callerClass");
 			logger.error("  callerClass  {}", callerClass.getTypeName());
 			throw new UnexpectedException("Unexpctected callerClass");
 		}
-		
+
 		callUpdate((UpdateBase)ClassUtil.getInstance(callerClass));
 	}
 	public static void callUpdate(UpdateBase updateBase) {
@@ -55,16 +55,18 @@ public abstract class UpdateBase {
 		logger.info("STOP  {}  {}", exitCode, updateBase.getClass().getTypeName());
 		System.exit(exitCode);
 	}
-	
+
 	protected Duration gracePeriod = Duration.ofHours(3);
 	protected boolean needsUpdate(File file) {
 		if (file.exists()) {
 			var fileDuration = FileUtil.getLastModifiedDuration(file);
-			if (fileDuration.compareTo(gracePeriod) < 0) return false; // skip this file. because the file is in grace period
+			if (fileDuration.compareTo(gracePeriod) < 0) {
+				return false; // skip this file. because the file is in grace period
+			}
 		}
 		return true;
 	}
-	
+
 	public <E> void checkDuplicateKey(List<E> list, Function<E, String> opKey) {
 		var map = new HashMap<String, E>();
 		for(var e: list) {
@@ -82,15 +84,15 @@ public abstract class UpdateBase {
 			}
 		}
 	}
-	
-	
+
+
 	//
 	// save list to LoadSaveFileList
 	//
 	public <E extends Comparable<E>> void checkAndSave(List<E> list, LoadSaveFileList<E> loadSave) {
 		var oldString = loadSave.read();
 		var newString = loadSave.read(list);
-		
+
 		if (newString.equals(oldString)) {
 			logger.info("no needs to update file");
 		} else {
@@ -103,7 +105,7 @@ public abstract class UpdateBase {
 	public <E extends Comparable<E>> void checkAndSave(Collection<E> collection, LoadSaveFileList<E> loadSave) {
 		checkAndSave(new ArrayList<E>(collection), loadSave);
 	}
-	
+
 	public <E extends Comparable<E>> void save(List<E> list, LoadSaveFileList<E> loadSave) {
 		logger.info("save  {}  {}", list.size(), loadSave.getFile());
 		loadSave.save(list);
