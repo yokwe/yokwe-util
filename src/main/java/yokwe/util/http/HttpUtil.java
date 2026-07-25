@@ -42,7 +42,7 @@ import yokwe.util.UnexpectedException;
 
 public class HttpUtil {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
 
 	private static final HttpRequester requester;
@@ -50,13 +50,13 @@ public class HttpUtil {
 		SocketConfig socketConfig = SocketConfig.custom()
                 .setSoTimeout(30, TimeUnit.SECONDS)
                 .build();
-		
+
 		requester = RequesterBootstrap.bootstrap()
                 .setSocketConfig(socketConfig)
                 .setMaxTotal(100)
                 .setDefaultMaxPerRoute(50)
                 .create();
-		
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -65,10 +65,10 @@ public class HttpUtil {
            }
         });
 	}
-	
+
     private static final HttpCoreContext httpContext = HttpCoreContext.create();
 
-	
+
 	private static final boolean DEFAULT_TRACE      = false;
 	private static final String  DEFAULT_TRACE_DIR  = "tmp/http";
 	private static final Charset DEFAULT_CHARSET    = StandardCharsets.UTF_8;
@@ -83,11 +83,11 @@ public class HttpUtil {
 		boolean rawData;
 
 		Map<String, String> headerMap;
-		
+
 		// For POST
 		String postBody;
 		String postContentType;
-		
+
 		private Context() {
 			trace      = DEFAULT_TRACE;
 			traceDir   = DEFAULT_TRACE_DIR;
@@ -95,15 +95,19 @@ public class HttpUtil {
 			rawData    = DEFAULT_RAW_DATA;
 
 			headerMap  =  new TreeMap<>();
-			
+
 			postBody        = null;
 			postContentType = null;
-			
-			if (DEFAULT_USER_AGENT != null) headerMap.put("User-Agent", DEFAULT_USER_AGENT);
-			if (DEFAULT_CONNECTION != null) headerMap.put("Connection", DEFAULT_CONNECTION);
+
+			if (DEFAULT_USER_AGENT != null) {
+				headerMap.put("User-Agent", DEFAULT_USER_AGENT);
+			}
+			if (DEFAULT_CONNECTION != null) {
+				headerMap.put("Connection", DEFAULT_CONNECTION);
+			}
 		}
 	}
-	
+
 	public static class Result {
 		public final String              url;
 		public final String              result;
@@ -111,12 +115,12 @@ public class HttpUtil {
 		public final Map<String, String> headerMap;
 		public final String              timestamp;
 		public final String              path;
-		
+
 		public final HttpResponse        response;
 		public final int                 code;
 		public final String              reasonPhrase;
 		public final ProtocolVersion     version;
-		
+
 		public Result (Context context, String url, String result, byte[] rawData,
 				HttpResponse response) {
 			this.url       = url;
@@ -125,10 +129,10 @@ public class HttpUtil {
 			this.headerMap = new TreeMap<>();
 			Arrays.asList(response.getHeaders()).stream().forEach(o -> this.headerMap.put(o.getName(), o.getValue()));
 			this.timestamp = LocalDateTime.now(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
-			
+
 			if (context.trace) {
 				this.path = String.format("%s/%s", context.traceDir, timestamp);
-				
+
 				if (result != null) {
 					FileUtil.write().file(this.path, result);
 				} else {
@@ -137,28 +141,28 @@ public class HttpUtil {
 			} else {
 				this.path = null;
 			}
-			
+
 			this.response     = response;
 			this.code         = response.getCode();
 			this.reasonPhrase = response.getReasonPhrase();
 			this.version      = response.getVersion();
 		}
-		
+
 		@Override
 		public String toString() {
 			return String.format("{%s %s %d %s %s %d}", timestamp, url, code, reasonPhrase, version, rawData.length);
 		}
 	}
-	
+
 	public static HttpUtil getInstance() {
 		return new HttpUtil();
 	}
-	
+
 	private final Context context;
 	private HttpUtil() {
 		this.context = new Context();
 	}
-	
+
 	public HttpUtil withTrace(boolean newValue) {
 		context.trace = newValue;
 		return this;
@@ -179,7 +183,7 @@ public class HttpUtil {
 		context.rawData = newValue;
 		return this;
 	}
-	
+
 	public HttpUtil withReferer(String newValue) {
 		withHeader("Referer", newValue);
 		return this;
@@ -211,17 +215,17 @@ public class HttpUtil {
 		context.postContentType = contentType;
 		return this;
 	}
-	
+
 	private static class MyResponse {
 		HttpResponse response;
 		Charset      charset;
 		byte[]       content;
-		
+
 		MyResponse(ClassicHttpResponse response) {
 			this.response = response;
-			
+
 			HttpEntity entity = response.getEntity();
-//			logger.debug("entity       {}", entity);			
+//			logger.debug("entity       {}", entity);
 //			logger.debug("entiry contentTyppe {}", entity.getContentEncoding());
 //			logger.debug("entiry contentLenth {}", entity.getContentLength());
 //			logger.debug("entiry contentType  {}", entity.getContentType());
@@ -229,7 +233,7 @@ public class HttpUtil {
 //			for(var e: response.getHeaders()) {
 //				logger.debug("response header       {} {}!", e.getName(), e.getValue());
 //			}
-			
+
 			if (entity == null) {
 				charset = null;
 				content = null;
@@ -256,7 +260,7 @@ public class HttpUtil {
 						logger.error("  entity {}", entity);
 						throw new UnexpectedException("Unexpected contentEncoding");
 					}
-					
+
 					content = is.readAllBytes();
 					is.close();
 					is = null;
@@ -279,7 +283,7 @@ public class HttpUtil {
 //			logger.info("response {} {}", charset, content.length);
 		}
 	}
-	
+
 	private Result download(String url) {
 		URI                uri     = URI.create(url);
 		HttpHost           target  = HttpHost.create(uri);
@@ -292,7 +296,7 @@ public class HttpUtil {
 		String postContentType = context.postContentType;
 		context.postBody        = null;
 		context.postContentType = null;
-		
+
 		if (postBody != null) {
 			ContentType contentType = ContentType.parse(postContentType);
 			HttpEntity entity = HttpEntities.create(postBody, contentType);
@@ -306,7 +310,7 @@ public class HttpUtil {
 				HttpResponse response     = myResponse.response;
 		        int          code         = response.getCode();
 		        String       reasonPhrase = response.getReasonPhrase();
-		        
+
 				if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
 					if (retryCount < 10) {
 						retryCount++;
@@ -331,7 +335,7 @@ public class HttpUtil {
 						continue;
 					}
 				}
-				
+
 				retryCount = 0;
 				if (code == HttpStatus.SC_NOT_FOUND) { // 404
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
@@ -359,7 +363,7 @@ public class HttpUtil {
 				}
 		        if (code == HttpStatus.SC_OK) {
 	    			byte[] rawData = myResponse.content;
-					
+
 	    			final String result;
 					if (context.rawData) {
 						result = null;
@@ -373,13 +377,13 @@ public class HttpUtil {
 					}
 
 	    			Result ret = new Result(context, url, result, rawData, response);
-					
+
 					if (ret.path != null) {
 						logger.info(String.format("%s %7d %s", ret.timestamp, ret.rawData.length, ret.url));
 					}
 					return ret;
 		        }
-		        
+
 				// Other code
 				logger.error("statusLine = {} {} {}", code, reasonPhrase, response.getVersion());
 				logger.error("url {}", url);
@@ -413,6 +417,125 @@ public class HttpUtil {
 			}
 		}
 	}
+	private Result downloadOrNull(String url) {
+		URI                uri     = URI.create(url);
+		HttpHost           target  = HttpHost.create(uri);
+        ClassicHttpRequest request = new BasicClassicHttpRequest((context.postBody != null) ? Method.POST : Method.GET, uri);
+
+		for(var e: context.headerMap.entrySet()) {
+			request.setHeader(e.getKey(), e.getValue());
+		}
+		String postBody        = context.postBody;
+		String postContentType = context.postContentType;
+		context.postBody        = null;
+		context.postContentType = null;
+
+		if (postBody != null) {
+			ContentType contentType = ContentType.parse(postContentType);
+			HttpEntity entity = HttpEntities.create(postBody, contentType);
+			request.setEntity(entity);
+		}
+
+		try {
+			MyResponse   myResponse   = requester.execute(target, request, Timeout.ofSeconds(5), httpContext, o -> new MyResponse(o));
+			HttpResponse response     = myResponse.response;
+	        int          code         = response.getCode();
+	        String       reasonPhrase = response.getReasonPhrase();
+
+	        if (code == HttpStatus.SC_OK) {
+    			byte[] rawData = myResponse.content;
+
+    			final String result;
+				if (context.rawData) {
+					result = null;
+				} else {
+					if (rawData == null) {
+						result = null;
+					} else {
+						Charset charset = myResponse.charset == null ? context.charset : myResponse.charset;
+						result = new String(rawData, charset);
+					}
+				}
+
+    			Result ret = new Result(context, url, result, rawData, response);
+
+				if (ret.path != null) {
+					logger.info(String.format("%s %7d %s", ret.timestamp, ret.rawData.length, ret.url));
+				}
+				return ret;
+	        }
+
+	        // expected failure
+			if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+			if (code == HttpStatus.SC_FORBIDDEN) { // 403
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+			if (code == HttpStatus.SC_SERVICE_UNAVAILABLE) { // 503
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+			if (code == HttpStatus.SC_NOT_FOUND) { // 404
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+			if (code == HttpStatus.SC_BAD_REQUEST) { // 400
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+			if (code == HttpStatus.SC_MOVED_TEMPORARILY) { // 302
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				Header location = response.getHeader("Location");
+				if (location != null) {
+					logger.warn("  {} {}!", location.getName(), location.getValue());
+				}
+				return null;
+			}
+			if (code == HttpStatus.SC_SERVER_ERROR) { // 500
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+			if (code == HttpStatus.SC_UNAUTHORIZED) { // 401
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
+
+			// Unexpected failure
+			logger.error("statusLine = {} {} {}", code, reasonPhrase, response.getVersion());
+			logger.error("url {}", url);
+			logger.error("code {}", code);
+			{
+				if (context.rawData) {
+					logger.error("entity RAW_DATA");
+				} else {
+	    			byte[]  rawData = myResponse.content;
+	    			if (rawData == null) {
+	    				logger.error("entity  rawData == null");
+	    			} else {
+						Charset charset = myResponse.charset == null ? context.charset : myResponse.charset;
+				    	logger.error("entity  {}", new String(rawData, charset));
+	    			}
+				}
+			}
+			throw new UnexpectedException("download");
+		} catch (SocketTimeoutException e) {
+			String exceptionName = e.getClass().getSimpleName();
+			logger.warn("{}", exceptionName);
+			return null;
+		} catch (NoHttpResponseException e) {
+			String exceptionName = e.getClass().getSimpleName();
+			logger.warn("{}", exceptionName);
+			return null;
+		} catch (IOException | HttpException e) {
+			String exceptionName = e.getClass().getSimpleName();
+			logger.error("{} {}", exceptionName, e);
+			throw new UnexpectedException(exceptionName, e);
+		}
+	}
+
 	public String downloadString(String url) {
 		HttpUtil.Result result = this.withRawData(false).download(url);
 		if (result == null || result.result == null) {
@@ -420,6 +543,16 @@ public class HttpUtil {
 			logger.error("  url     {}", url);
 			logger.error("  result  {}", result);
 			throw new UnexpectedException("Unexpected");
+		}
+		return result.result;
+	}
+	public String downloadStringOrNull(String url) {
+		HttpUtil.Result result = this.withRawData(false).downloadOrNull(url);
+		if (result == null || result.result == null) {
+			logger.warn("Unexpected");
+			logger.warn("  url     {}", url);
+			logger.warn("  result  {}", result);
+			return null;
 		}
 		return result.result;
 	}
