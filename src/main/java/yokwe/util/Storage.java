@@ -16,22 +16,27 @@ import yokwe.util.json.JSON;
 
 public class Storage {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	public static void initialize() {};
-	
+
+	static {
+		logger.info("PROCESS       {}  {}", ProcessHandle.current().pid(), Thread.currentThread().getName());
+	}
+
 	private static final String CONFIG_FILE = "data/storage.json";
-	
+
 	public static class Config {
 		public String path;
-		
+
 		@Override
 		public String toString() {
 			return ToString.withFieldName(this);
 		}
 	}
-	
+
 	private static File getDataFile() {
 		logger.info("CONFIG_FILE   {}", CONFIG_FILE);
+		logger.info("  process     {}  {}", ProcessHandle.current().pid(), Thread.currentThread().getName());
 		var configFile = new File(CONFIG_FILE);
 		// Sanity check
 		if (!configFile.canRead()) {
@@ -46,10 +51,10 @@ public class Storage {
 			logger.error("  dataFile  {}", dataFile.getPath());
 			throw new UnexpectedException("Not directory");
 		}
-		
+
 		return dataFile;
 	}
-	
+
 	public static final Storage storage = new Storage(getDataFile());
 
 	private final File file;
@@ -100,14 +105,14 @@ public class Storage {
 	public Storage getStorage(String... names) {
 		return new Storage(getFile(names));
 	}
-	
-	
+
+
 	//
 	// LoadSave
 	//
 	public interface LoadSave {
 	}
-	
+
 	//
 	// LoadSaveFileXXX
 	//
@@ -115,7 +120,7 @@ public class Storage {
 		protected final Storage  storage;
 		protected final String   name;
 		protected final File     file;
-		
+
 		public LoadSaveFile(Storage storage, String name) {
 			this.storage = storage;
 			this.name    = name;
@@ -140,7 +145,7 @@ public class Storage {
 		public LoadSaveFileGeneric(Storage storage, String name) {
 			super(storage, name);
 		}
-		
+
 		public abstract T      load();
 		public abstract void   save(T value);
 		public abstract String read();
@@ -170,12 +175,12 @@ public class Storage {
 	}
 	public static class LoadSaveFileList<E extends Comparable<E>> extends LoadSaveFileGeneric<List<E>> {
 		protected final Class<E> clazz;
-		
+
 		public LoadSaveFileList(Class<E> clazz, Storage storage, String name) {
 			super(storage, name);
 			this.clazz = clazz;
 		}
-		
+
 		@Override
 		public List<E> load() {
 			return CSVUtil.read(clazz).file(file);
@@ -193,8 +198,8 @@ public class Storage {
 		public void write(String string) {
 			FileUtil.write().file(file, string);
 		}
-		
-		
+
+
 		public List<E> load(Reader reader) {
 			return CSVUtil.read(clazz).file(reader);
 		}
@@ -206,11 +211,11 @@ public class Storage {
 			var list = load(reader);
 			return list == null ? new ArrayList<>() : list;
 		}
-		
+
 		public void save(Collection<E> collection) {
 			save(new ArrayList<E>(collection));
 		}
-		
+
 		public String read(List<E> list) {
 			var sw = new StringWriter();
 			Collections.sort(list);
@@ -218,8 +223,8 @@ public class Storage {
 			return sw.toString();
 		}
 	}
-	
-	
+
+
 	//
 	// LoadSaveDirectoryXXX
 	//
@@ -228,7 +233,7 @@ public class Storage {
 		protected final String                   prefix;
 		protected final Function<String, String> opName;
 		protected final File                     dir;
-		
+
 		public LoadSaveDirectory(Storage storage, String prefix, Function<String, String> opName) {
 			this.storage = storage;
 			this.prefix  = prefix;
@@ -278,10 +283,10 @@ public class Storage {
 		public abstract void   save(String name, T value);
 		public abstract String read(String name);
 		public abstract void   write(String name, String value);
-		
+
 		public LoadSaveDirectoryGeneric(Storage storage, String prefix, Function<String, String> opName) {
 			super(storage, prefix, opName);
-		}		
+		}
 	}
 	public static class LoadSaveDirectoryString extends LoadSaveDirectoryGeneric<String> {
 		public LoadSaveDirectoryString(Storage storage, String prefix, Function<String, String> opName) {
@@ -310,7 +315,7 @@ public class Storage {
 	}
 	public static class LoadSaveDirectoryList<E extends Comparable<E>> extends LoadSaveDirectoryGeneric<List<E>> {
 		private final Class<E> clazz;
-		
+
 		public LoadSaveDirectoryList(Class<E> clazz, Storage storage, String prefix, Function<String, String> opName) {
 			super(storage, prefix, opName);
 			this.clazz = clazz;
@@ -334,12 +339,12 @@ public class Storage {
 			FileUtil.write().file(getFile(name), value);
 		}
 
-		
+
 		public List<E> getList(String name) {
 			var list = load(name);
 			return list == null ? new ArrayList<>() : list;
 		}
-		
+
 		// reader
 		public List<E> load(Reader reader) {
 			return CSVUtil.read(clazz).file(reader);
@@ -348,7 +353,7 @@ public class Storage {
 			var list = load(reader);
 			return list == null ? new ArrayList<>() : list;
 		}
-		
+
 		public void save(String name, Collection<E> collection) {
 			save(name, new ArrayList<E>(collection));
 		}
