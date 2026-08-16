@@ -303,7 +303,6 @@ public class HttpUtil {
 			request.setEntity(entity);
 		}
 
-		int retryCount = 0;
 		for(;;) {
 			try {
 				MyResponse   myResponse   = requester.execute(target, request, Timeout.ofSeconds(5), httpContext, o -> new MyResponse(o));
@@ -311,32 +310,43 @@ public class HttpUtil {
 		        int          code         = response.getCode();
 		        String       reasonPhrase = response.getReasonPhrase();
 
-				if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
-					if (retryCount < 10) {
-						retryCount++;
-						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
-						Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
-						continue;
+		        // success
+		        if (code == HttpStatus.SC_OK) {
+	    			byte[] rawData = myResponse.content;
+
+	    			final String result;
+					if (context.rawData) {
+						result = null;
+					} else {
+						if (rawData == null) {
+							result = null;
+						} else {
+							Charset charset = myResponse.charset == null ? context.charset : myResponse.charset;
+							result = new String(rawData, charset);
+						}
 					}
+
+	    			Result ret = new Result(context, url, result, rawData, response);
+
+					if (ret.path != null) {
+						logger.info(String.format("%s %7d %s", ret.timestamp, ret.rawData.length, ret.url));
+					}
+					return ret;
+		        }
+
+		        // expected error
+				if (code == HttpStatus.SC_SERVICE_UNAVAILABLE) { // 503
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					return null;
+				}
+				if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					return null;
 				}
 				if (code == HttpStatus.SC_FORBIDDEN) { // 403
-					if (retryCount < 10) {
-						retryCount++;
-						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
-						Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
-						continue;
-					}
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					return null;
 				}
-				if (code == HttpStatus.SC_SERVICE_UNAVAILABLE) { // 503
-					if (retryCount < 10) {
-						retryCount++;
-						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
-						Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
-						continue;
-					}
-				}
-
-				retryCount = 0;
 				if (code == HttpStatus.SC_NOT_FOUND) { // 404
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
@@ -361,30 +371,8 @@ public class HttpUtil {
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
 				}
-		        if (code == HttpStatus.SC_OK) {
-	    			byte[] rawData = myResponse.content;
 
-	    			final String result;
-					if (context.rawData) {
-						result = null;
-					} else {
-						if (rawData == null) {
-							result = null;
-						} else {
-							Charset charset = myResponse.charset == null ? context.charset : myResponse.charset;
-							result = new String(rawData, charset);
-						}
-					}
-
-	    			Result ret = new Result(context, url, result, rawData, response);
-
-					if (ret.path != null) {
-						logger.info(String.format("%s %7d %s", ret.timestamp, ret.rawData.length, ret.url));
-					}
-					return ret;
-		        }
-
-				// Other code
+				// unexpected error
 				logger.error("statusLine = {} {} {}", code, reasonPhrase, response.getVersion());
 				logger.error("url {}", url);
 				logger.error("code {}", code);
@@ -410,7 +398,7 @@ public class HttpUtil {
 				String exceptionName = e.getClass().getSimpleName();
 				logger.warn("{}", exceptionName);
 				return null;
-			} catch (IOException | HttpException | InterruptedException e) {
+			} catch (IOException | HttpException e) {
 				String exceptionName = e.getClass().getSimpleName();
 				logger.error("{} {}", exceptionName, e);
 				throw new UnexpectedException(exceptionName, e);
@@ -563,6 +551,16 @@ public class HttpUtil {
 			logger.error("  url     {}", url);
 			logger.error("  result  {}", result);
 			throw new UnexpectedException("Unexpected");
+		}
+		return result.rawData;
+	}
+	public byte[] downloadRawOrNull(String url) {
+		HttpUtil.Result result = this.withRawData(true).download(url);
+		if (result == null || result.rawData == null) {
+			logger.warn("Unexpected");
+			logger.warn("  url     {}", url);
+			logger.warn("  result  {}", result);
+			return null;
 		}
 		return result.rawData;
 	}
