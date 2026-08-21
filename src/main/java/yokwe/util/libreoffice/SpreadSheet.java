@@ -36,28 +36,33 @@ import yokwe.util.UnexpectedException;
 
 public class SpreadSheet extends LibreOffice {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	public static final String FORMAT_STRING  = "@";
 	public static final String FORMAT_DATE    = "YYYY-MM-DD";
-	
+
 	public static final String FORMAT_PERCENT = "#,##0.0%;[RED]-#,##0.0%";
-	
+
 	public static final String FORMAT_PERCENT0 = "#,##0%;[RED]-#,##0%";
 	public static final String FORMAT_PERCENT2 = "#,##0.00%;[RED]-#,##0.00%";
 	public static final String FORMAT_PERCENT3 = "#,##0.000%;[RED]-#,##0.000%";
 
+	public static final String FORMAT_PERCENT0_BLANK = "#,##0%;[RED]-#,##0%;\"\";@";
+	public static final String FORMAT_PERCENT2_BLANK = "#,##0.00%;[RED]-#,##0.00%;\"\";@";
+
+
 	public static final String FORMAT_INTEGER = "#,##0.#####;[RED]-#,##0.#####";
-	
+
 	public static final String FORMAT_NUMBER0 = "#,##0;[RED]-#,##0";
 	public static final String FORMAT_NUMBER2 = "#,##0.00;[RED]-#,##0.00";
 	public static final String FORMAT_NUMBER3 = "#,##0.000;[RED]-#,##0.000";
 	public static final String FORMAT_NUMBER4 = "#,##0.0000;[RED]-#,##0.0000";
 	public static final String FORMAT_NUMBER5 = "#,##0.00000;[RED]-#,##0.00000";
-	
+
 	public static final String FORMAT_NUMBER_MILLION = "#,##0,,;[RED]-#,##0,,";
-	
+
+	public static final String FORMAT_NUMBER0_BLANK = "#,##0;[RED]-#,##0;\"\";@";
 	public static final String FORMAT_NUMBER2_BLANK = "#,##0.00;[RED]-#,##0.00;\"\";@";
-	
+
 	public static final String FORMAT_USD  = "[$$-409]#,##0.00;[RED]-[$$-409]#,##0.00";
 	public static final String FORMAT_USD5 = "[$$-409]#,##0.00000;[RED]-[$$-409]#,##0.00000";
 	public static final String FORMAT_JPY  = "[$￥-411]#,##0;[RED]-[$￥-411]#,##0";
@@ -84,7 +89,7 @@ public class SpreadSheet extends LibreOffice {
 		}
 		return ret;
 	}
-	
+
 	public static final LocalDate DATE_EPOCH = LocalDate.of(1899, 12, 30);
 	public static double toDateNumber(String dateString) {
 		LocalDate date = LocalDate.parse(dateString);
@@ -93,18 +98,18 @@ public class SpreadSheet extends LibreOffice {
 	public static String toDateString(double dateNumber) {
 		return DateTimeFormatter.ISO_LOCAL_DATE.format(DATE_EPOCH.plusDays((int)dateNumber));
 	}
-	
-	
+
+
 	public SpreadSheet(String urlString, boolean readOnly) {
 		super(urlString, readOnly);
 	}
-	
+
 	public static final String NEW_SPREADSHEET_URL = "private:factory/scalc";
 	public SpreadSheet() {
 		super(NEW_SPREADSHEET_URL, false);
 	}
 
-	
+
 	private XSpreadsheetDocument getXSpreadsheetDocument() {
 		XSpreadsheetDocument spreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, component);
 		if (spreadsheetDocument == null) {
@@ -133,7 +138,9 @@ public class SpreadSheet extends LibreOffice {
 		XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSheets());
 		String[] names = nameAccess.getElementNames();
 		for(int i = 0; i < names.length; i++) {
-			if (names[i].equals(sheetName)) return i;
+			if (names[i].equals(sheetName)) {
+				return i;
+			}
 		}
 		logger.info("No sheet {}", sheetName);
 		throw new UnexpectedException("No sheet");
@@ -187,7 +194,7 @@ public class SpreadSheet extends LibreOffice {
 			logger.info("component {}", component.toString());
 			throw new UnexpectedException("Unexpected component");
 		}
-		
+
 		try {
 			XSpreadsheetDocument oldDoc = oldSheet.getXSpreadsheetDocument();
 			spreadSheets.importSheet(oldDoc, oldName, newSheetPosition);
@@ -199,7 +206,7 @@ public class SpreadSheet extends LibreOffice {
 			throw new UnexpectedException("IndexOutOfBoundsException");
 		}
 	}
-	
+
 	public void renameSheet(String oldSheetName, String newSheetName) {
 		int index = getSheetIndex(oldSheetName);
 		copySheet(oldSheetName, newSheetName, index);
@@ -237,7 +244,9 @@ public class SpreadSheet extends LibreOffice {
 			for(int i = rowFirst; i < data.length; i++) {
 				Object o = data[i][0];
 				// if o is empty string return ret
-				if (o instanceof String && ((String)o).length() == 0) return ret;
+				if (o instanceof String && ((String)o).length() == 0) {
+					return ret;
+				}
 				ret = i;
 			}
 			return ret;
@@ -246,11 +255,11 @@ public class SpreadSheet extends LibreOffice {
 			throw new UnexpectedException("Unexpected exception");
 		}
 	}
-	
+
 	private static final Locale locale = new Locale();
 	private static final String PROPERTY_NUMBER_FORMAT = "NumberFormat";
 	private static final String PROPERTY_FORMAT_STRING = "FormatString";
-	
+
 	public XNumberFormats getNumberFormats() {
 		XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
 		return xNumberFormatsSupplier.getNumberFormats();
@@ -258,7 +267,7 @@ public class SpreadSheet extends LibreOffice {
 	public static String getFormatString(XCell cell, XNumberFormats xNumberFormats) {
 		try {
 			XPropertySet   xPropertySet      = UnoRuntime.queryInterface(XPropertySet.class, cell);
-			
+
 			int            index             = AnyConverter.toInt(xPropertySet.getPropertyValue(PROPERTY_NUMBER_FORMAT));
 			XPropertySet   numberFormatProps = xNumberFormats.getByKey(index);
 			String         formatString      = AnyConverter.toString(numberFormatProps.getPropertyValue(PROPERTY_FORMAT_STRING));
@@ -271,14 +280,14 @@ public class SpreadSheet extends LibreOffice {
 	public String getFormatString(XCell cell) {
 		return getFormatString(cell, getNumberFormats());
 	}
-	
+
 	public static void setNumberFormat(XCell cell, String numberFormat, XNumberFormats xNumberFormats) {
 		try {
 			int index = xNumberFormats.queryKey(numberFormat, locale, false);
 			if (index == -1) {
 				index = xNumberFormats.addNew(numberFormat, locale);
 			}
-			
+
 			XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, cell);
 			xPropertySet.setPropertyValue(PROPERTY_NUMBER_FORMAT, Integer.valueOf(index));
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
@@ -287,14 +296,14 @@ public class SpreadSheet extends LibreOffice {
 			throw new UnexpectedException("Unexpected exception");
 		}
 	}
-	
+
 	public static void setNumberFormat(XCellRange xCellRange, String numberFormat, XNumberFormats xNumberFormats) {
 		try {
 			int index = xNumberFormats.queryKey(numberFormat, locale, false);
 			if (index == -1) {
 				index = xNumberFormats.addNew(numberFormat, locale);
 			}
-			
+
 			XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
 			xPropertySet.setPropertyValue(PROPERTY_NUMBER_FORMAT, Integer.valueOf(index));
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
@@ -303,7 +312,7 @@ public class SpreadSheet extends LibreOffice {
 			throw new UnexpectedException("Unexpected exception");
 		}
 	}
-	
+
 	public void setNumberFormat(XCell cell, String numberFormat) {
 		setNumberFormat(cell, numberFormat, getNumberFormats());
 	}
