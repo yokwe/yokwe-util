@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -128,6 +130,20 @@ public class Storage {
 		}
 		public File getFile() {
 			return file;
+		}
+		public File getFile(LocalDateTime localDateTime) {
+			var timestamp  = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(localDateTime);
+			var pos = name.lastIndexOf(".");
+			if (pos == -1) {
+				logger.error("Unexpected name");
+				logger.error("  name  {}!", name);
+				throw new UnexpectedException("Unexpected name");
+			}
+			var prefix = name.substring(0, pos);
+			var suffix = name.substring(pos);
+
+			var newName = prefix + "-" + timestamp + suffix;
+			return storage.getFile(newName);
 		}
 		public File getFile(String newName) {
 			return storage.getFile(newName);
