@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +38,7 @@ import java.util.TreeMap;
 
 public class CSVUtil {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public static @interface ColumnName {
@@ -55,9 +56,13 @@ public class CSVUtil {
 	public static final LocalTime     NULL_LOCAL_TIME      = LocalTime.of(0, 0, 0);
 	public static final LocalDateTime NULL_LOCAL_DATE_TIME = LocalDateTime.of(NULL_LOCAL_DATE, NULL_LOCAL_TIME);
 
+	public static final DateTimeFormatter FORMATTER_LOCAL_DATE_TIME = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss");
+	public static final DateTimeFormatter FORMATTER_LOCAL_TIME      = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+
 	private static class ClassInfo {
 		private static Map<String, ClassInfo> map = new TreeMap<>();
-		
+
 		static ClassInfo get(Class<?> clazz) {
 			String key = clazz.getName();
 			if (map.containsKey(key)) {
@@ -72,19 +77,21 @@ public class CSVUtil {
 		final Class<?>       clazz;
 		final FieldInfo[]    fieldInfos;
 		final String[]       names;
-		
+
 		ClassInfo(Class<?> value) {
 			clazz = value;
-			
+
 			List<FieldInfo> list = new ArrayList<>();
 			for(Field field: clazz.getDeclaredFields()) {
 				// Skip static field
-				if (Modifier.isStatic(field.getModifiers())) continue;
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
 				field.setAccessible(true); // to access protected and private file, call setAccessble(true) of the field
 				list.add(new FieldInfo(field));
 			}
 			fieldInfos = list.toArray(new FieldInfo[0]);
-			
+
 			names = new String[fieldInfos.length];
 			for(int i = 0; i < names.length; i++) {
 				names[i] = fieldInfos[i].name;
@@ -97,20 +104,20 @@ public class CSVUtil {
 		final Class<?> type;
 		final String   typeName;
 		final String   format;
-		
+
 		final Map<String, Enum<?>> enumMap;
 		final Method               getInstance;
 
-		
+
 		FieldInfo(Field value) {
 			field      = value;
-			
+
 			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
 			name = (columnName == null) ? field.getName() : columnName.value();
 
 			type      = field.getType();
 			typeName  = type.getName();
-			
+
 			DecimalPlaces decimalPlaces = field.getDeclaredAnnotation(DecimalPlaces.class);
 			if (decimalPlaces == null) {
 				format = null;
@@ -133,10 +140,10 @@ public class CSVUtil {
 					throw new UnexpectedException("Unexpected field type for DecimalPlaces annotation");
 				}
 			}
-			
+
 			if (type.isEnum()) {
 				enumMap = new TreeMap<>();
-				
+
 				@SuppressWarnings("unchecked")
 				Class<Enum<?>> enumClazz = (Class<Enum<?>>)type;
 				for(Enum<?> e: enumClazz.getEnumConstants()) {
@@ -145,7 +152,7 @@ public class CSVUtil {
 			} else {
 				enumMap = null;
 			}
-			
+
 			{
 				Method method = null;
 				try {
@@ -170,15 +177,17 @@ public class CSVUtil {
 
 		}
 	}
-	
+
 	public static String[] parseLine(BufferedReader br, char separator) {
-		try {			
+		try {
 			// Peek one char to check end of stream
 			{
 				// record stream position
 				br.mark(1);
 				int firstChar = br.read();
-				if (firstChar == -1) return null;
+				if (firstChar == -1) {
+					return null;
+				}
 				if (StringUtil.isBOM((char)firstChar)) {
 					// firstChar is BOM. skip firstChar
 				} else {
@@ -186,13 +195,15 @@ public class CSVUtil {
 					br.reset();
 				}
 			}
-			
+
 			List<String> list  = new ArrayList<>();
 			StringBuffer field = new StringBuffer();
 			boolean endOfRecord = false;
 			for(;;) {
-				if (endOfRecord) break;
-				
+				if (endOfRecord) {
+					break;
+				}
+
 				int fieldFirstChar = br.read();
 				if (fieldFirstChar == -1) {
 					// end of record -- last field of last line without \r\n
@@ -228,7 +239,7 @@ public class CSVUtil {
 				} else if (fieldFirstChar == '"') {
 					// quoted field
 					field.setLength(0);
-					
+
 					for(;;) {
 						int c = br.read();
 						if (c == -1) {
@@ -304,7 +315,7 @@ public class CSVUtil {
 				} else {
 					// ordinary field
 					field.setLength(0);
-					
+
 					field.append((char)fieldFirstChar);
 					for(;;) {
 						int c = br.read();
@@ -343,7 +354,7 @@ public class CSVUtil {
 //					logger.debug("ord field  {}!", field.toString());
 				}
 			}
-			
+
 			// Remove byte order mark from list element
 			for(String string: list) {
 				string = StringUtil.removeBOM(string);
@@ -361,21 +372,21 @@ public class CSVUtil {
 		BufferedReader br = new BufferedReader(sr);
 		return parseLine(br, separator);
 	}
-	
-	
+
+
 	private static class Context {
 		private boolean withHeader = true;
 		private char    separator  = ',';
 		private Charset charset    = Charset.defaultCharset();
 	}
-	
+
 	public static <E> Read<E> read(Class<E> clazz) {
 		return new Read<E>(clazz);
 	}
 	public static class Read<E> {
 		private final Context   context;
 		private final ClassInfo classInfo;
-				
+
 		private Read(Class<E> clazz) {
 			context   = new Context();
 			classInfo = ClassInfo.get(clazz);
@@ -399,7 +410,7 @@ public class CSVUtil {
 				logger.error("Unexpected EOF");
 				throw new UnexpectedException("Unexpected EOF");
 			}
-			
+
 			// Sanity check
 			if (classInfo.names.length != names.length) {
 				logger.error("Unexpected length  {}  {}  {}", classInfo.names.length, names.length, Arrays.asList(names));
@@ -415,7 +426,9 @@ public class CSVUtil {
 				throw new UnexpectedException("Unexpected length");
 			}
 			for(int i = 0; i < names.length; i++) {
-				if (names[i].equals(classInfo.names[i])) continue;
+				if (names[i].equals(classInfo.names[i])) {
+					continue;
+				}
 				logger.error("Unexpected name  {}  {}  {}", i, names[i], classInfo.names[i]);
 				logger.error("classInfo  {}", classInfo.clazz.getName());
 				logger.error("====");
@@ -433,7 +446,7 @@ public class CSVUtil {
 		private interface GetArg<E> {
 			public E get(String string);
 		}
-		
+
 		private static Map<String, GetArg<?>> getArgMap = new TreeMap<>();
 		static {
 			getArgMap.put(java.math.BigDecimal.class.getTypeName(),    (String s) -> {s = s.replace(",", ""); return s.isEmpty() ? BigDecimal.ZERO : new BigDecimal(s);});
@@ -448,21 +461,31 @@ public class CSVUtil {
 			getArgMap.put(java.lang.Boolean.TYPE.getTypeName(),        (String s) -> {return s.equals("1");});
 			getArgMap.put(java.lang.String.class.getTypeName(),        (String s) -> {return s;});
 			getArgMap.put(java.time.LocalDateTime.class.getTypeName(), (String s) -> {
-				if (s.isEmpty() || s.equals("0")) return NULL_LOCAL_DATE_TIME;
-				if (s.matches("\\d++")) return LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(s)), ZoneOffset.UTC);
+				if (s.isEmpty() || s.equals("0")) {
+					return NULL_LOCAL_DATE_TIME;
+				}
+				if (s.matches("\\d++")) {
+					return LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(s)), ZoneOffset.UTC);
+				}
 				return LocalDateTime.parse(s);
 			});
 			getArgMap.put(java.time.LocalDate.class.getTypeName(), (String s) -> {
-				if (s.isEmpty() || s.equals("0")) return NULL_LOCAL_DATE;
-				if (s.matches("\\d++")) return LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(s)), ZoneOffset.UTC);
+				if (s.isEmpty() || s.equals("0")) {
+					return NULL_LOCAL_DATE;
+				}
+				if (s.matches("\\d++")) {
+					return LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(s)), ZoneOffset.UTC);
+				}
 				return LocalDate.parse(s);
 			});
 			getArgMap.put(java.time.LocalTime.class.getTypeName(), (String s) -> {
-				if (s.isEmpty() || s.equals("0")) return NULL_LOCAL_TIME;
+				if (s.isEmpty() || s.equals("0")) {
+					return NULL_LOCAL_TIME;
+				}
 				return LocalTime.parse(s);
 			});
 		}
-		
+
 		private static Object getArg(FieldInfo fieldInfo, String value) {
 			if (fieldInfo.enumMap != null) {
 				if (fieldInfo.enumMap.containsKey(value)) {
@@ -486,11 +509,13 @@ public class CSVUtil {
 			logger.error("Unknow field type  {}  {}", fieldInfo.typeName, value);
 			throw new UnexpectedException("Unknow enum value");
 		}
-		
+
 		private E read(BufferedReader br) {
 			String[] values = parseLine(br, context.separator);
-			if (values == null) return null;
-			
+			if (values == null) {
+				return null;
+			}
+
 			FieldInfo[] fieldInfos = classInfo.fieldInfos;
 			// sanity check
 			if (fieldInfos.length != values.length) {
@@ -498,7 +523,7 @@ public class CSVUtil {
 				logger.error("values     {}", values.length);
 				throw new UnexpectedException("fieldInfos.length != values.length");
 			}
-			
+
 			try {
 				// build args
 				Object[] args = new Object[classInfo.fieldInfos.length];
@@ -507,7 +532,7 @@ public class CSVUtil {
 					String    value     = values[i];
 					args[i] = getArg(fieldInfo, value);
 				}
-				
+
 				@SuppressWarnings("unchecked")
 				E data = (E) ClassUtil.getInstance(classInfo.clazz, args);
 				return data;
@@ -542,11 +567,13 @@ public class CSVUtil {
 				if (context.withHeader) {
 					readHeader(br, context.separator);
 				}
-				
+
 				List<E> ret = new ArrayList<>();
 				for(;;) {
-					E e = (E)read(br);
-					if (e == null) break;
+					E e = read(br);
+					if (e == null) {
+						break;
+					}
 					ret.add(e);
 				}
 				return ret;
@@ -557,8 +584,12 @@ public class CSVUtil {
 			}
 		}
 		public List<E> file(File file) {
-			if (!file.exists()) return null;
-			if (file.length() == 0) return null;
+			if (!file.exists()) {
+				return null;
+			}
+			if (file.length() == 0) {
+				return null;
+			}
 			try {
 				return file(new FileReader(file, context.charset));
 			} catch (IOException e) {
@@ -605,14 +636,14 @@ public class CSVUtil {
 			return file(is);
 		}
 	}
-	
+
 	public static <E> Write<E> write(Class<E> clazz) {
 		return new Write<E>(clazz);
 	}
 	public static class Write<E> {
 		private final Context   context;
 		private final ClassInfo classInfo;
-				
+
 		private Write(Class<E> clazz) {
 			context   = new Context();
 			classInfo = ClassInfo.get(clazz);
@@ -621,11 +652,11 @@ public class CSVUtil {
 			context.withHeader = newValue;
 			return this;
 		}
-		
+
 		private void writeHeader(BufferedWriter bw) {
 			try {
 				FieldInfo[] fieldInfos = classInfo.fieldInfos;
-				
+
 				bw.write(fieldInfos[0].name);
 				for(int i = 1; i < fieldInfos.length; i++) {
 					bw.write(",");
@@ -641,7 +672,7 @@ public class CSVUtil {
 		private void writeField(BufferedWriter bw, String value) throws IOException {
 			if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r") || value.contains(";")) {
 				bw.write("\"");
-				
+
 				char[] charArray = value.toCharArray();
 				for(int i = 0; i < charArray.length; i++) {
 					char c = charArray[i];
@@ -663,21 +694,23 @@ public class CSVUtil {
 						break;
 					}
 				}
-				
-				bw.write("\"");						
+
+				bw.write("\"");
 			} else {
 				bw.write(value);
 			}
 		}
 		private void write(BufferedWriter bw, E value) {
 			FieldInfo[] fieldInfos = classInfo.fieldInfos;
-			
+
 			try {
 				for(int i = 0; i < fieldInfos.length; i++) {
-					if (1 <= i) bw.write(",");
-					
+					if (1 <= i) {
+						bw.write(",");
+					}
+
 					FieldInfo fieldInfo = fieldInfos[i];
-					
+
 					// sanity check
 					{
 						Object fieldValue = fieldInfo.field.get(value);
@@ -714,6 +747,22 @@ public class CSVUtil {
 						// special for boolean  1 for true 0 for false
 						boolean fieldValue = (boolean)fieldInfo.field.get(value);
 						writeField(bw, fieldValue ? "1" : "0");
+					}
+						break;
+					case "java.time.LocalDateTime":
+					{
+						// FIXME use annotation to specify output format
+						// uuuu-MM-dd'T'HH:mm:ss
+						LocalDateTime localDateTime = (LocalDateTime)fieldInfo.field.get(value);
+						writeField(bw, localDateTime.format(FORMATTER_LOCAL_DATE_TIME));
+					}
+						break;
+					case "java.time.LocaTime":
+					{
+						// FIXME use annotation to specify output format
+						// uuuu-MM-dd'T'HH:mm:ss
+						LocalTime localTime = (LocalTime)fieldInfo.field.get(value);
+						writeField(bw, localTime.format(FORMATTER_LOCAL_TIME));
 					}
 						break;
 					default:
@@ -760,7 +809,7 @@ public class CSVUtil {
 					parent.mkdirs();
 				}
 			}
-			
+
 			try {
 				file(new FileWriter(file), collection);
 			} catch (IOException e) {
