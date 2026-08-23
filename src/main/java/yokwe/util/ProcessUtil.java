@@ -57,9 +57,6 @@ public class ProcessUtil {
 			return String.format("{%d  %s  %s}", pid, user, command);
 		}
 
-		public boolean isJavaCommand() {
-			return command.endsWith("/bin/java");
-		}
 		public String lastArg() {
 			int pos = args.lastIndexOf(" ");
 			return pos != -1 ? args.substring(pos + 1) : "?";

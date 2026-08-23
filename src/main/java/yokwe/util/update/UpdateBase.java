@@ -41,7 +41,7 @@ public abstract class UpdateBase {
 			if (!list.isEmpty()) {
 				var self = ProcessUtil.ProcessInfo.getInstance(ProcessHandle.current());
 
-				logger.error("Same java process is running");
+				logger.error("Same process is running");
 				logger.error("  self   {}  {}", self.pid, self.lastArg());
 
 				for(var e: list) {
