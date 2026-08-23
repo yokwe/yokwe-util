@@ -26,27 +26,27 @@ import yokwe.util.UnexpectedException;
 
 public abstract class LibreOffice implements Closeable {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
+
 	private static void killOwnLibreOffceProcess() {
 		var commandSet = Set.of(
 			"/Applications/LibreOffice.app/Contents/MacOS/soffice"
 		);
-		
+
 		for(var e: ProcessUtil.killOwnProcess(commandSet)) {
-			logger.info("kill libreoffice process  {}", ProcessUtil.toString(e));
+			logger.info("kill libreoffice process  {}", e.toString());
 		}
 	}
 	static {
 		// kill own LibreOoffice process
 		killOwnLibreOffceProcess();
 	}
-	
+
 	private static final String[] bootstrapOptions = {
 			"--minimized",
 			"--headless",
 			"--invisible",
 	};
-	
+
 	private static final XComponentLoader componentLoader;
 	private static final XDesktop         desktop;
 
@@ -67,7 +67,7 @@ public abstract class LibreOffice implements Closeable {
 			componentLoader = tempC;
 			desktop         = tempD;
 		}
-		
+
 		if (componentLoader == null || desktop == null) {
 			logger.error("Unexpected null");
 			logger.error("  componentLoader  {}", componentLoader);
@@ -75,10 +75,10 @@ public abstract class LibreOffice implements Closeable {
 			throw new UnexpectedException("Unexpected null");
 		}
 	}
-	
+
 	// initialize is dummy function that call static initializer
 	public static void initialize() {}
-	
+
 	// terminate to stop LibreOffice (soffice) process started by static initializer
 	// NOTE terminate() generate exception with LibreOffice 6.x 7.x 24.x
 	// NOTE Last version that does not generate exception is LibreOffice 7.5.9.2
@@ -94,10 +94,10 @@ public abstract class LibreOffice implements Closeable {
 			desktop.terminate();
 		}
 	}
-	
-	
+
+
 	protected final XComponent component;
-		
+
 	protected LibreOffice(String urlString, boolean readOnly) {
 		try {
 			PropertyValue[] props = new PropertyValue[] {
@@ -112,8 +112,9 @@ public abstract class LibreOffice implements Closeable {
 			logger.info("Exception {}", e.toString());
 			throw new UnexpectedException("Unexpected exception");
 		}
-	}	
-	
+	}
+
+	@Override
 	public void close() {
 		XCloseable closeable = null;
 		{
@@ -122,7 +123,7 @@ public abstract class LibreOffice implements Closeable {
 				closeable = UnoRuntime.queryInterface(XCloseable.class, xModel);
 			}
 		}
-		
+
 		if (closeable != null) {
 			try {
 				closeable.close(true);
@@ -133,7 +134,7 @@ public abstract class LibreOffice implements Closeable {
 			component.dispose();
 		}
 	}
-	
+
 	// Store Document to URL
 	public void store(String urlStore) {
 		try {

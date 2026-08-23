@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 import yokwe.util.ClassUtil;
 import yokwe.util.FileUtil;
+import yokwe.util.ProcessUtil;
 import yokwe.util.StackWalkerUtil;
 import yokwe.util.Storage.LoadSaveFileList;
 import yokwe.util.Storage.LoadSaveFileString;
@@ -28,10 +29,26 @@ public abstract class UpdateBase {
 	public static void callUpdate() {
 		Class<?> callerClass = StackWalkerUtil.getCallerStackFrame(StackWalkerUtil.OFFSET_CALLER).getDeclaringClass();
 		// sanity check
+		// check caller class is subclass of UpdateBase
 		if (!UpdateBase.class.isAssignableFrom(callerClass)) {
 			logger.error("Unexpctected callerClass");
 			logger.error("  callerClass  {}", callerClass.getTypeName());
 			throw new UnexpectedException("Unexpctected callerClass");
+		}
+		// check same process is running
+		{
+			var list = ProcessUtil.listSameProcess();
+			if (!list.isEmpty()) {
+				var self = ProcessUtil.ProcessInfo.getInstance(ProcessHandle.current());
+
+				logger.error("Same java process is running");
+				logger.error("  self   {}  {}", self.pid, self.lastArg());
+
+				for(var e: list) {
+					logger.error("  other  {}  {}", e.pid, e.lastArg());
+				}
+				throw new UnexpectedException("Same java process is running");
+			}
 		}
 
 		callUpdate((UpdateBase)ClassUtil.getInstance(callerClass));
