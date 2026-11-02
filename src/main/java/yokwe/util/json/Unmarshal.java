@@ -40,8 +40,8 @@ public class Unmarshal {
 	public static <E> E getInstance(Class<E> clazz, Reader reader) {
 		return unmarshal(clazz, getJsonValue(reader));
 	}
-	
-	
+
+
 	//
 	// getList
 	//
@@ -63,15 +63,15 @@ public class Unmarshal {
 	}
 	private static <E> List<E> getList(Class<E> clazz, JsonArray jsonArray) {
 		var jsonArraySize = jsonArray.size();
-		
+
 		List<E> ret = new ArrayList<>(jsonArraySize);
 		for(var i = 0; i < jsonArraySize; i++) {
 			ret.add(unmarshal(clazz, jsonArray.get(i)));
 		}
 		return ret;
 	}
-	
-	
+
+
 	//
 	// unmarshal
 	//
@@ -90,7 +90,7 @@ public class Unmarshal {
 			}
 			return null;
 		}
-		
+
 		// enum
 		if (clazz.isEnum()) {
 			if (valueType == ValueType.STRING) {
@@ -104,12 +104,12 @@ public class Unmarshal {
 				throw new UnexpectedException("Unexpected valueType");
 			}
 		}
-		
+
 		// array
 		if (clazz.isArray()) {
 			if (valueType == ValueType.ARRAY) {
 				var ret = unmarshalArray(clazz, jsonValue.asJsonArray());
-				return (E)ret;
+				return ret;
 			} else {
 				logger.error("Unexpected valueType");
 				logger.error("  expect ARRAY");
@@ -119,7 +119,7 @@ public class Unmarshal {
 				throw new UnexpectedException("Unexpected valueType");
 			}
 		}
-		
+
 		// common java class
 		{
 			var function = functionMap.get(clazz.getTypeName());
@@ -130,7 +130,7 @@ public class Unmarshal {
 				return ret;
 			}
 		}
-		
+
 		// process object
 		if (valueType == ValueType.OBJECT) {
 			return unmarshalObject(clazz, jsonValue.asJsonObject());
@@ -143,9 +143,9 @@ public class Unmarshal {
 			throw new UnexpectedException("Unexpected valueType");
 		}
 	}
-	
 
-	
+
+
 	//
 	// unmarshalObject
 	//
@@ -161,20 +161,22 @@ public class Unmarshal {
 			logger.error("  clazz      {}", clazz.getTypeName());
 			throw new UnexpectedException("Unexpected clazz is enum");
 		}
-		
+
 		// order of jsonObject field is not significant
 		// invoke default constructor of E and set field value from jsonObject
 		try {
 			var fieldInfoArray   = FieldInfo.getFieldInfoArray(clazz);
-			
+
 			// sanity check
 			{
 				var foundError = false;
-				
-				var jsonObjectKeySet = jsonObject.keySet();				
+
+				var jsonObjectKeySet = jsonObject.keySet();
 				for(var fieldInfo: fieldInfoArray) {
-					if (fieldInfo.ignore) continue;
-					
+					if (fieldInfo.ignore) {
+						continue;
+					}
+
 					if (!jsonObjectKeySet.contains(fieldInfo.jsonName)) {
 						if (fieldInfo.optional) {
 							// OK
@@ -184,7 +186,7 @@ public class Unmarshal {
 							logger.error("  fieldName  {}", fieldInfo.fieldName);
 							logger.error("  jsonName   {}", fieldInfo.jsonName);
 							logger.error("  type       {}", fieldInfo.typeName);
-							logger.error("  jsonObject {}", jsonObject.toString());
+//							logger.error("  jsonObject {}", jsonObject.toString());
 						}
 					}
 				}
@@ -195,14 +197,14 @@ public class Unmarshal {
 						logger.error("jsonObject jsonName not found in field");
 						logger.error("  clazz      {}", clazz.getTypeName());
 						logger.error("  jsonName   {}", jsonName);
-						logger.error("  jsonObject {}", jsonObject.toString());
+//						logger.error("  jsonObject {}", jsonObject.toString());
 					}
 				}
 				if (foundError) {
 					throw new UnexpectedException("found error");
 				}
 			}
-			
+
 			// invoke default constructor
 			E ret;
 			{
@@ -215,16 +217,18 @@ public class Unmarshal {
 				constructor.setAccessible(true); // enable invoke private constructor
 				ret = constructor.newInstance();
 			}
-			
+
 			// set object field using fieldInfoArray
 			for(var fieldInfo: fieldInfoArray) {
-				if (fieldInfo.ignore) continue;
-				
+				if (fieldInfo.ignore) {
+					continue;
+				}
+
 				var key = fieldInfo.jsonName;
 				if (jsonObject.containsKey(key)) {
 					var jsonValue = jsonObject.get(key);
 					Object fieldValue;
-					
+
 					// special for LocalDateTime, LocalDate, LocalTime and Map
 					if (fieldInfo.type.equals(LocalDateTime.class)) {
 						fieldValue = unmarshalLocalDateTime(jsonValue, fieldInfo.dateTimeFormatter);
@@ -237,11 +241,11 @@ public class Unmarshal {
 					} else {
 						fieldValue = unmarshal(fieldInfo.type, jsonValue);
 					}
-					
+
 					fieldInfo.field.set(ret, fieldValue);
 				}
 			}
-			
+
 			return ret;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
 				InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -250,7 +254,7 @@ public class Unmarshal {
 			throw new UnexpectedException(exceptionName, e);
 		}
 	}
-	
+
 	private static LocalDateTime unmarshalLocalDateTime(JsonValue jsonValue, DateTimeFormatter dateTimeFormatter) {
 		var valueType = jsonValue.getValueType();
 		if (valueType == ValueType.STRING) {
@@ -320,29 +324,31 @@ public class Unmarshal {
 			logger.error("  key    {}", mapKeyClass.getTypeName());
 			throw new UnexpectedException("Unexpected map key class");
 		}
-		
+
 		return unmarshalMap(mapValueClass, jsonValue);
 	}
 	public static <V> Map<String, V> unmarshalMap(Class<V> mapValueClass, JsonValue jsonValue) {
-		if (jsonValue.getValueType() == ValueType.NULL) return null;
-		
+		if (jsonValue.getValueType() == ValueType.NULL) {
+			return null;
+		}
+
 		var ret = new TreeMap<String, V>();
-		
+
 		// build ret
 		{
 			var jsonObject = jsonValue.asJsonObject();
 			for(var entry: jsonObject.entrySet()) {
 				var key   = entry.getKey();
 				var value = entry.getValue();
-				
+
 				ret.put(key, unmarshal(mapValueClass, value));
 			}
 		}
 
 		return ret;
 	}
-	
-	
+
+
 	//
 	// unmarshalArray
 	//
@@ -353,20 +359,20 @@ public class Unmarshal {
 			logger.error("  clazz      {}", clazz.getTypeName());
 			throw new UnexpectedException("Unexpected clazz is not array");
 		}
-		
+
 		var componentType = clazz.getComponentType();
 		var size          = jsonArray.size();
 		@SuppressWarnings("unchecked")
 		E ret = (E)Array.newInstance(componentType, size);
-		
+
 		for(int i = 0; i < size; i++) {
 			Array.set(ret, i, unmarshal(componentType, jsonArray.get(i)));
 		}
 		return ret;
 	}
-	
-	
-		
+
+
+
 	//
 	// Functions convert JsonValue to Object
 	//
@@ -420,8 +426,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return Double.valueOf(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return Double.valueOf(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -433,8 +441,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return Float.valueOf(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return Float.valueOf(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -446,8 +456,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return Long.valueOf(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return Long.valueOf(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -459,8 +471,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return Integer.valueOf(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return Integer.valueOf(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -472,8 +486,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return Short.valueOf(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return Short.valueOf(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -485,8 +501,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return Byte.valueOf(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return Byte.valueOf(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -509,7 +527,7 @@ public class Unmarshal {
 					char c = string.charAt(0);
 					return Character.valueOf(c);
 				}
-				
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect STRING");
 				logger.error("  valueType {}", valueType);
@@ -522,8 +540,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.STRING) return jsonValueToString(jsonValue);
-				
+				if (valueType == ValueType.STRING) {
+					return jsonValueToString(jsonValue);
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect STRING");
 				logger.error("  valueType {}", valueType);
@@ -535,8 +555,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.STRING) return LocalDateTime.parse(jsonValueToString(jsonValue));
-				
+				if (valueType == ValueType.STRING) {
+					return LocalDateTime.parse(jsonValueToString(jsonValue));
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect STRING");
 				logger.error("  valueType {}", valueType);
@@ -548,8 +570,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.STRING) return LocalDate.parse(jsonValueToString(jsonValue));
-				
+				if (valueType == ValueType.STRING) {
+					return LocalDate.parse(jsonValueToString(jsonValue));
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect STRING");
 				logger.error("  valueType {}", valueType);
@@ -561,8 +585,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.STRING) return LocalTime.parse(jsonValueToString(jsonValue));
-				
+				if (valueType == ValueType.STRING) {
+					return LocalTime.parse(jsonValueToString(jsonValue));
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect STRING");
 				logger.error("  valueType {}", valueType);
@@ -575,8 +601,10 @@ public class Unmarshal {
 			@Override
 			public Object apply(JsonValue jsonValue) {
 				var valueType = jsonValue.getValueType();
-				if (valueType == ValueType.NUMBER) return new BigDecimal(jsonValue.toString());
-				
+				if (valueType == ValueType.NUMBER) {
+					return new BigDecimal(jsonValue.toString());
+				}
+
 				logger.error("Unexpected valueType");
 				logger.error("  expect NUMBER");
 				logger.error("  valueType {}", valueType);
@@ -585,9 +613,9 @@ public class Unmarshal {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	//
 	// enum
 	//
@@ -599,7 +627,7 @@ public class Unmarshal {
 			logger.error("  clazz      {}", clazz.getTypeName());
 			throw new UnexpectedException("Unexpected clazz is not enum");
 		}
-		
+
 		var typeName = clazz.getTypeName();
 		var map = enumValueMap.get(typeName);
 		if (map == null) {
@@ -609,7 +637,7 @@ public class Unmarshal {
 			}
 			enumValueMap.put(typeName, map);
 		}
-		
+
 		var valueType = jsonValue.getValueType();
 		if (valueType == ValueType.STRING) {
 			var string = jsonValueToString(jsonValue);
@@ -632,9 +660,9 @@ public class Unmarshal {
 			throw new UnexpectedException("Unexpected valueType");
 		}
 	}
-	
-	
-	
+
+
+
 	//
 	// utility methods
 	//
@@ -649,7 +677,7 @@ public class Unmarshal {
 	}
 	private static String jsonValueToString(JsonValue jsonValue) {
 		var string = jsonValue.toString();
-		if (jsonValue.getValueType() == ValueType.STRING) {			
+		if (jsonValue.getValueType() == ValueType.STRING) {
 			// sanity check
 			var first = string.charAt(0);
 			var last  = string.charAt(string.length() - 1);
@@ -661,7 +689,7 @@ public class Unmarshal {
 				logger.error("  last   {}", last);
 				throw new UnexpectedException("Unexpected first or last character");
 			}
-			
+
 			// remove first and last character of string
 			return string.substring(1, string.length() - 1);
 		} else {
