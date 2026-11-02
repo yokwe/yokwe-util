@@ -310,7 +310,8 @@ public class HttpUtil {
 		        int          code         = response.getCode();
 		        String       reasonPhrase = response.getReasonPhrase();
 
-		        // success
+		        // 2XX
+		        // 200
 		        if (code == HttpStatus.SC_OK) {
 	    			byte[] rawData = myResponse.content;
 
@@ -335,11 +336,38 @@ public class HttpUtil {
 		        }
 
 		        // expected error
-				if (code == HttpStatus.SC_SERVICE_UNAVAILABLE) { // 503
+		        // 3XX
+				if (code == HttpStatus.SC_MOVED_TEMPORARILY) { // 302
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					Header location = response.getHeader("Location");
+					if (location != null) {
+						logger.warn("  {} {}!", location.getName(), location.getValue());
+					}
+					return null;
+				}
+				if (code == HttpStatus.SC_SEE_OTHER) { // 303
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					Header location = response.getHeader("Location");
+					if (location != null) {
+						logger.warn("  {} {}!", location.getName(), location.getValue());
+					}
+					return null;
+				}
+				if (code == HttpStatus.SC_TEMPORARY_REDIRECT) { // 307
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					Header location = response.getHeader("Location");
+					if (location != null) {
+						logger.warn("  {} {}!", location.getName(), location.getValue());
+					}
+					return null;
+				}
+
+		        // 4XX
+				if (code == HttpStatus.SC_BAD_REQUEST) { // 400
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
 				}
-				if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
+				if (code == HttpStatus.SC_UNAUTHORIZED) { // 401
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
 				}
@@ -351,23 +379,17 @@ public class HttpUtil {
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
 				}
-				if (code == HttpStatus.SC_BAD_REQUEST) { // 400
+				if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
 				}
-				if (code == HttpStatus.SC_MOVED_TEMPORARILY) { // 302
+
+		        // 5XX
+				if (code == HttpStatus.SC_SERVICE_UNAVAILABLE) { // 503
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
-					Header location = response.getHeader("Location");
-					if (location != null) {
-						logger.warn("  {} {}!", location.getName(), location.getValue());
-					}
 					return null;
 				}
 				if (code == HttpStatus.SC_SERVER_ERROR) { // 500
-					logger.warn("{} {}  {}", code, reasonPhrase, url);
-					return null;
-				}
-				if (code == HttpStatus.SC_UNAUTHORIZED) { // 401
 					logger.warn("{} {}  {}", code, reasonPhrase, url);
 					return null;
 				}
@@ -405,7 +427,7 @@ public class HttpUtil {
 			}
 		}
 	}
-	private Result downloadOrNull(String url) {
+	public Result downloadOrNull(String url) {
 		URI                uri     = URI.create(url);
 		HttpHost           target  = HttpHost.create(uri);
         ClassicHttpRequest request = new BasicClassicHttpRequest((context.postBody != null) ? Method.POST : Method.GET, uri);
@@ -454,6 +476,10 @@ public class HttpUtil {
 	        }
 
 	        // expected failure
+			if (code == HttpStatus.SC_SEE_OTHER) { // 302 See Other
+				logger.warn("{} {}  {}", code, reasonPhrase, url);
+				return null;
+			}
 			if (code == HttpStatus.SC_TOO_MANY_REQUESTS) { // 429 Too Many Requests
 				logger.warn("{} {}  {}", code, reasonPhrase, url);
 				return null;
