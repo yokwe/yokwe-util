@@ -14,6 +14,7 @@ import yokwe.util.ClassUtil;
 import yokwe.util.FileUtil;
 import yokwe.util.ProcessUtil;
 import yokwe.util.StackWalkerUtil;
+import yokwe.util.Storage.LoadSaveFile;
 import yokwe.util.Storage.LoadSaveFileList;
 import yokwe.util.Storage.LoadSaveFileString;
 import yokwe.util.UnexpectedException;
@@ -74,14 +75,24 @@ public abstract class UpdateBase {
 	}
 
 	protected Duration gracePeriod = Duration.ofHours(3);
+
 	protected boolean needsUpdate(File file) {
+		return needsUpdate(file, gracePeriod);
+	}
+	protected boolean needsUpdate(File file, Duration duration) {
 		if (file.exists()) {
 			var fileDuration = FileUtil.getLastModifiedDuration(file);
-			if (fileDuration.compareTo(gracePeriod) < 0) {
+			if (fileDuration.compareTo(duration) < 0) {
 				return false; // skip this file. because the file is in grace period
 			}
 		}
 		return true;
+	}
+	protected boolean needsUpdate(LoadSaveFile loadSaveFile) {
+		return needsUpdate(loadSaveFile.getFile());
+	}
+	protected boolean needsUpdate(LoadSaveFile loadSaveFile, Duration duration) {
+		return needsUpdate(loadSaveFile.getFile(), duration);
 	}
 
 	public <E> void checkDuplicateKey(List<E> list, Function<E, String> opKey) {
