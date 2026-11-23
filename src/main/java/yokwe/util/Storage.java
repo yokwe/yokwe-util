@@ -156,6 +156,23 @@ public class Storage {
 				FileUtil.copy(getFile(), getOldFile());
 			}
 		}
+
+		@Override
+		public String toString() {
+			return file.toString();
+		}
+	}
+	public static class LoadSaveFileBinary extends LoadSaveFile {
+		public LoadSaveFileBinary(Storage storage, String name) {
+			super(storage, name);
+		}
+
+		public byte[] load() {
+			return FileUtil.rawRead().file(getFile());
+		}
+		public void save(byte[] data) {
+			FileUtil.rawWrite().file(getFile(), data);
+		}
 	}
 	public abstract static class LoadSaveFileGeneric<T> extends LoadSaveFile {
 		public LoadSaveFileGeneric(Storage storage, String name) {
@@ -205,6 +222,10 @@ public class Storage {
 		public void save(List<E> list) {
 			Collections.sort(list);
 			CSVUtil.write(clazz).file(file, list);
+		}
+		public void saveWithNull(List<E> list) {
+			Collections.sort(list);
+			CSVUtil.write(clazz).writeNullAsBlank(true).file(file, list);
 		}
 		@Override
 		public String read() {
