@@ -1,5 +1,6 @@
 package yokwe.util.libreoffice;
 
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -102,6 +103,9 @@ public class SpreadSheet extends LibreOffice {
 
 	public SpreadSheet(String urlString, boolean readOnly) {
 		super(urlString, readOnly);
+	}
+	public SpreadSheet(URL url, boolean readOnly) {
+		super(url.toString(), readOnly);
 	}
 
 	public static final String NEW_SPREADSHEET_URL = "private:factory/scalc";
