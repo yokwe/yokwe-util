@@ -378,6 +378,8 @@ public class CSVUtil {
 		private boolean withHeader = true;
 		private char    separator  = ',';
 		private Charset charset    = Charset.defaultCharset();
+
+		private boolean writeNullAsBlank = false;
 	}
 
 	public static <E> Read<E> read(Class<E> clazz) {
@@ -652,6 +654,11 @@ public class CSVUtil {
 			context.withHeader = newValue;
 			return this;
 		}
+		public Write<E> writeNullAsBlank(boolean newValue) {
+			context.writeNullAsBlank = newValue;
+			return this;
+		}
+
 
 		private void writeHeader(BufferedWriter bw) {
 			try {
@@ -715,10 +722,16 @@ public class CSVUtil {
 					{
 						Object fieldValue = fieldInfo.field.get(value);
 						if (fieldValue == null) {
-							logger.error("field has null value");
-							logger.error("  clazz  {}", fieldInfo.typeName);
-							logger.error("  field  {}", fieldInfo.name);
-							throw new UnexpectedException("field has null value");
+
+							if (context.writeNullAsBlank) {
+								writeField(bw, "");
+								continue;
+							} else {
+								logger.error("field has null value");
+								logger.error("  clazz  {}", fieldInfo.typeName);
+								logger.error("  field  {}", fieldInfo.name);
+								throw new UnexpectedException("field has null value");
+							}
 						}
 					}
 
@@ -738,7 +751,8 @@ public class CSVUtil {
 					{
 						// To avoid scientific expression of value, need to use toPlainString().
 						BigDecimal bigDecimalValue = (BigDecimal)fieldInfo.field.get(value);
-						writeField(bw, bigDecimalValue.toPlainString());
+						var string = bigDecimalValue.compareTo(BigDecimal.ZERO) == 0 ? "0" : bigDecimalValue.stripTrailingZeros().toPlainString();
+						writeField(bw, string);
 					}
 						break;
 					case "java.lang.Boolean":
