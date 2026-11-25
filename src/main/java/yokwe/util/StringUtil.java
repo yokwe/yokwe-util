@@ -125,7 +125,7 @@ public class StringUtil {
 	// toHalfWidth
 	//
 	public static String toHalfWidth(String string) {
-		return replaceCharacter(HALFWIDTH_STRING, FULLWIDTH_STRING, string);
+		return replaceCharacter(FULLWIDTH_STRING, HALFWIDTH_STRING, string);
 	}
 
 
