@@ -44,8 +44,10 @@ public class SpreadSheet extends LibreOffice {
 	public static final String FORMAT_PERCENT = "#,##0.0%;[RED]-#,##0.0%";
 
 	public static final String FORMAT_PERCENT0 = "#,##0%;[RED]-#,##0%";
+	public static final String FORMAT_PERCENT1 = "#,##0.0%;[RED]-#,##0.0%";
 	public static final String FORMAT_PERCENT2 = "#,##0.00%;[RED]-#,##0.00%";
 	public static final String FORMAT_PERCENT3 = "#,##0.000%;[RED]-#,##0.000%";
+	public static final String FORMAT_PERCENT4 = "#,##0.0000%;[RED]-#,##0.0000%";
 
 	public static final String FORMAT_PERCENT0_BLANK = "#,##0%;[RED]-#,##0%;\"\";@";
 	public static final String FORMAT_PERCENT2_BLANK = "#,##0.00%;[RED]-#,##0.00%;\"\";@";
@@ -68,6 +70,7 @@ public class SpreadSheet extends LibreOffice {
 	public static final String FORMAT_USD5 = "[$$-409]#,##0.00000;[RED]-[$$-409]#,##0.00000";
 	public static final String FORMAT_JPY  = "[$￥-411]#,##0;[RED]-[$￥-411]#,##0";
 	public static final String FORMAT_JPY1 = "[$￥-411]#,##0.0;[RED]-[$￥-411]#,##0.0";
+	public static final String FORMAT_JPYM = "[$￥-411]#,##0,,;[RED]-[$￥-411]#,##0,,";
 
 	public static final String FORMAT_USD_BLANK  = "[$$-409]#,##0.00;[RED]-[$$-409]#,##0.00;\"\";@";
 	public static final String FORMAT_USD5_BLANK = "[$$-409]#,##0.00000;[RED]-[$$-409]#,##0.00000;\"\";@";
